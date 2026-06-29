@@ -141,7 +141,7 @@ async function translateText({ text, sourceLanguage, targetLanguage }) {
       ].join(" "),
       input: text,
       max_output_tokens: 220,
-      reasoning: { effort: "minimal" },
+      reasoning: { effort: "low" },
       text: { verbosity: "low" },
       store: false,
     }),

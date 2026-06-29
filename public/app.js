@@ -253,6 +253,10 @@ function validLanguage(language) {
   return languageMeta[language] ? language : "ko";
 }
 
+function isSupportedLanguage(language) {
+  return Boolean(languageMeta[language]);
+}
+
 function t(key, params = {}) {
   const value = copy[state.language]?.[key] || copy.ko[key] || key;
   return value.replace(/\{(\w+)\}/g, (_, name) => params[name] ?? "");
@@ -260,7 +264,10 @@ function t(key, params = {}) {
 
 function init() {
   const params = new URLSearchParams(location.search);
-  state.language = validLanguage(localStorage.getItem("livesub-language") || params.get("language") || "ko");
+  const urlLanguage = params.get("language");
+  const storedLanguage = localStorage.getItem("livesub-language");
+  state.language = validLanguage(isSupportedLanguage(urlLanguage) ? urlLanguage : storedLanguage || "ko");
+  localStorage.setItem("livesub-language", state.language);
   els.roomCode.value = params.get("room") || randomRoomCode();
   els.displayName.value = localStorage.getItem("livesub-name") || "";
 

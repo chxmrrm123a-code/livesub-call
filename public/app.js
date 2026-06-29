@@ -43,6 +43,8 @@ const SpeechRecognition = globalThis.SpeechRecognition || globalThis.webkitSpeec
 const rtcConfig = {
   iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
 };
+const captionPreviewIntervalMs = 260;
+const captionPreviewTranslateDelayMs = 450;
 
 const state = {
   clientId: createClientId(),
@@ -61,6 +63,11 @@ const state = {
   muted: false,
   joined: false,
   remoteDisplayName: "상대방",
+  captionDraftId: null,
+  captionPreviewText: "",
+  captionPreviewSentAt: 0,
+  captionPreviewTimer: null,
+  remoteCaptionDrafts: new Map(),
 };
 
 function createClientId() {
@@ -270,6 +277,10 @@ async function makeOffer(peerId, peer) {
 
 async function handleSignal(message) {
   if (message.from === state.clientId) return;
+  if (message.type === "caption-preview") {
+    handleRemoteCaptionPreview(message);
+    return;
+  }
   if (message.type === "caption") {
     handleRemoteCaption(message);
     return;
@@ -330,7 +341,11 @@ function startSpeechRecognition() {
       if (result.isFinal) publishLocalCaption(text);
       else interim += `${text} `;
     }
-    if (interim.trim()) els.localSpeech.textContent = interim.trim();
+    if (interim.trim()) {
+      const previewText = interim.trim();
+      els.localSpeech.textContent = previewText;
+      queueLocalCaptionPreview(previewText);
+    }
   });
   recognition.addEventListener("end", () => {
     state.recognitionActive = false;
@@ -365,6 +380,10 @@ function startRecognitionSafely() {
 function stopSpeechRecognition() {
   clearTimeout(state.recognitionRestartTimer);
   state.recognitionRestartTimer = null;
+  clearTimeout(state.captionPreviewTimer);
+  state.captionPreviewTimer = null;
+  state.captionPreviewText = "";
+  state.captionDraftId = null;
   if (state.recognition) {
     try {
       state.recognition.stop();
@@ -373,8 +392,42 @@ function stopSpeechRecognition() {
   state.recognitionActive = false;
 }
 
+function createCaptionId() {
+  return `${state.clientId}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function activeCaptionId() {
+  if (!state.captionDraftId) state.captionDraftId = createCaptionId();
+  return state.captionDraftId;
+}
+
+function queueLocalCaptionPreview(text) {
+  if (!state.captionsEnabled || !text) return;
+  if (text === state.captionPreviewText) return;
+  state.captionPreviewText = text;
+
+  const now = Date.now();
+  const wait = Math.max(0, captionPreviewIntervalMs - (now - state.captionPreviewSentAt));
+  clearTimeout(state.captionPreviewTimer);
+  state.captionPreviewTimer = setTimeout(() => {
+    state.captionPreviewSentAt = Date.now();
+    sendSignal("caption-preview", {
+      id: activeCaptionId(),
+      text: state.captionPreviewText,
+      sourceLanguage: state.spokenLanguage,
+      speakerName: state.name,
+      at: Date.now(),
+    }).catch(() => {});
+  }, wait);
+}
+
 function publishLocalCaption(text) {
   if (!state.captionsEnabled) return;
+  const captionId = activeCaptionId();
+  clearTimeout(state.captionPreviewTimer);
+  state.captionPreviewTimer = null;
+  state.captionPreviewText = "";
+  state.captionDraftId = null;
   els.localSpeech.textContent = text;
   appendTranscript({
     speaker: state.name,
@@ -384,42 +437,134 @@ function publishLocalCaption(text) {
     status: languageMeta[state.spokenLanguage].label,
   });
   sendSignal("caption", {
+    id: captionId,
     text,
     sourceLanguage: state.spokenLanguage,
     speakerName: state.name,
     at: Date.now(),
-  });
+  }).catch(() => {});
 }
 
-async function handleRemoteCaption(message) {
+function captionKey(message, payload) {
+  return payload.id || `${message.from}-${payload.at || ""}`;
+}
+
+function captionStatus(sourceLanguage) {
+  return `${languageMeta[sourceLanguage]?.label || "원문"} → ${languageMeta[state.captionLanguage].label}`;
+}
+
+async function translateCaption(text, sourceLanguage) {
+  if (sourceLanguage === state.captionLanguage) {
+    return { translatedText: text, mode: "same-language" };
+  }
+  const response = await fetch("/api/translate", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      text,
+      sourceLanguage,
+      targetLanguage: state.captionLanguage,
+    }),
+  });
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.error || "번역 실패");
+  return result;
+}
+
+function handleRemoteCaptionPreview(message) {
   const payload = message.data;
+  if (!payload?.text || !payload.sourceLanguage) return;
   const speaker = payload.speakerName || "상대방";
   state.remoteDisplayName = speaker;
   renderRemoteIdentity();
   els.captionSource.textContent = payload.text;
-  els.captionMain.textContent = "번역 중...";
   animateVoice();
 
-  const item = appendTranscript({
-    speaker,
-    original: payload.text,
-    translation: "번역 중...",
-    local: false,
-    status: `${languageMeta[payload.sourceLanguage]?.label || "원문"} → ${languageMeta[state.captionLanguage].label}`,
-  });
+  const key = captionKey(message, payload);
+  let draft = state.remoteCaptionDrafts.get(key);
+  if (!draft) {
+    const item = appendTranscript({
+      speaker,
+      original: payload.text,
+      translation: "번역 준비 중...",
+      local: false,
+      status: captionStatus(payload.sourceLanguage),
+    });
+    item.classList.add("preview");
+    draft = {
+      item,
+      text: payload.text,
+      sourceLanguage: payload.sourceLanguage,
+      timer: null,
+      token: 0,
+      lastTranslation: "",
+    };
+    state.remoteCaptionDrafts.set(key, draft);
+  }
+
+  draft.text = payload.text;
+  draft.sourceLanguage = payload.sourceLanguage;
+  draft.item.querySelector(".transcript-original").textContent = payload.text;
+  draft.item.querySelector(".transcript-meta span").textContent = `${speaker} · ${captionStatus(payload.sourceLanguage)}`;
+  els.captionMain.textContent = draft.lastTranslation || "번역 준비 중...";
+  schedulePreviewTranslation(key, draft);
+}
+
+function schedulePreviewTranslation(key, draft) {
+  clearTimeout(draft.timer);
+  const token = (draft.token += 1);
+  draft.timer = setTimeout(async () => {
+    const text = draft.text;
+    try {
+      const result = await translateCaption(text, draft.sourceLanguage);
+      if (state.remoteCaptionDrafts.get(key) !== draft || draft.token !== token) return;
+      draft.lastTranslation = result.translatedText;
+      updateTranscript(draft.item, result.translatedText, result.mode);
+      if (els.captionSource.textContent === text) els.captionMain.textContent = result.translatedText;
+    } catch (error) {
+      if (state.remoteCaptionDrafts.get(key) !== draft || draft.token !== token) return;
+      const fallback = `번역 실패: ${error.message}`;
+      updateTranscript(draft.item, fallback, "error");
+      if (els.captionSource.textContent === text) els.captionMain.textContent = fallback;
+    }
+  }, captionPreviewTranslateDelayMs);
+}
+
+async function handleRemoteCaption(message) {
+  const payload = message.data;
+  if (!payload?.text || !payload.sourceLanguage) return;
+  const speaker = payload.speakerName || "상대방";
+  const key = captionKey(message, payload);
+  const draft = state.remoteCaptionDrafts.get(key);
+  let item = draft?.item;
+
+  if (draft) {
+    clearTimeout(draft.timer);
+    draft.token += 1;
+    state.remoteCaptionDrafts.delete(key);
+    item.classList.remove("preview");
+    item.querySelector(".transcript-original").textContent = payload.text;
+    item.querySelector(".transcript-meta span").textContent = `${speaker} · ${captionStatus(payload.sourceLanguage)}`;
+  }
+
+  state.remoteDisplayName = speaker;
+  renderRemoteIdentity();
+  els.captionSource.textContent = payload.text;
+  els.captionMain.textContent = draft?.lastTranslation || "번역 중...";
+  animateVoice();
+
+  if (!item) {
+    item = appendTranscript({
+      speaker,
+      original: payload.text,
+      translation: "번역 중...",
+      local: false,
+      status: captionStatus(payload.sourceLanguage),
+    });
+  }
 
   try {
-    const response = await fetch("/api/translate", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        text: payload.text,
-        sourceLanguage: payload.sourceLanguage,
-        targetLanguage: state.captionLanguage,
-      }),
-    });
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.error || "번역 실패");
+    const result = await translateCaption(payload.text, payload.sourceLanguage);
     updateTranscript(item, result.translatedText, result.mode);
     els.captionMain.textContent = result.translatedText;
   } catch (error) {
@@ -453,7 +598,7 @@ function updateTranscript(item, translation, mode) {
   item.querySelector(".transcript-translation").textContent = translation;
   if (mode === "demo") {
     const meta = item.querySelector(".transcript-meta span");
-    meta.textContent = `${meta.textContent} · 데모`;
+    if (!meta.textContent.includes("데모")) meta.textContent = `${meta.textContent} · 데모`;
   }
 }
 
@@ -539,6 +684,8 @@ function leaveCall() {
   state.eventSource?.close();
   state.eventSource = null;
   stopSpeechRecognition();
+  for (const draft of state.remoteCaptionDrafts.values()) clearTimeout(draft.timer);
+  state.remoteCaptionDrafts.clear();
   state.recognition = null;
   for (const peer of state.peers.values()) peer.close();
   state.peers.clear();

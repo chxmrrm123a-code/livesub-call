@@ -5,9 +5,177 @@ if (globalThis.__livesubCallLoaded) {
 globalThis.__livesubCallLoaded = true;
 
 const languageMeta = {
-  ko: { label: "한국어", speechCode: "ko-KR" },
-  en: { label: "English", speechCode: "en-US" },
-  vi: { label: "Tiếng Việt", speechCode: "vi-VN" },
+  ko: { label: "한국어", short: "한", realtime: "ko" },
+  en: { label: "English", short: "EN", realtime: "en" },
+  vi: { label: "Tiếng Việt", short: "VI", realtime: "vi" },
+};
+
+const copy = {
+  ko: {
+    appTitle: "실시간 번역 자막 통화",
+    nameLabel: "이름",
+    namePlaceholder: "내 이름",
+    roomLabel: "방 코드",
+    newRoom: "새 방",
+    startCall: "통화 시작",
+    shareLink: "초대 링크 공유",
+    mySpeech: "내 말",
+    transcriptTitle: "대화 기록",
+    clear: "지우기",
+    endCall: "끊기",
+    toggleMic: "마이크 켜기/끄기",
+    toggleCaptions: "자막 켜기/끄기",
+    summary: "{language}로 말하고 {language} 메뉴를 봅니다",
+    waiting: "대기 중",
+    roomReady: "새 방 준비됨",
+    requestingMic: "마이크 요청",
+    connecting: "연결 중",
+    callReady: "통화 가능",
+    callActive: "통화 중",
+    reconnecting: "재연결 중",
+    micBlocked: "마이크 차단",
+    peerWaiting: "상대방 대기 중",
+    peerConnecting: "상대방 연결 중",
+    peerJoined: "상대방 입장",
+    peerLeft: "상대방 퇴장",
+    connected: "연결됨",
+    disconnected: "연결 끊김",
+    remoteUser: "상대방",
+    remoteInitial: "?",
+    remoteCaptionReady: "상대방 말이 여기에 표시됩니다",
+    captionWaiting: "번역 자막 대기 중",
+    localCaptionReady: "Realtime 자막 대기 중",
+    waitingPeerLanguage: "상대방이 들어오면 Realtime 자막이 켜집니다",
+    realtimeConnecting: "Realtime 자막 연결 중",
+    realtimeReady: "Realtime 자막 연결됨",
+    realtimeFailed: "Realtime 자막 오류: {message}",
+    realtimeUnavailable: "Realtime API 키 또는 연결을 확인해주세요",
+    captionsOff: "자막 꺼짐",
+    captionsOn: "자막 켜짐",
+    micOn: "마이크",
+    micOff: "음소거",
+    captionsOnLabel: "자막",
+    captionsOffLabel: "자막 꺼짐",
+    linkShared: "링크 공유됨",
+    linkCopied: "링크 복사됨",
+    inviteText: "번역 통화방에 들어와 주세요.",
+    unsupportedMic: "이 브라우저는 마이크 통화를 지원하지 않습니다. Chrome이나 Samsung Internet으로 열어주세요.",
+    unsupportedCall: "이 브라우저는 음성 통화를 지원하지 않습니다. Chrome이나 Samsung Internet으로 열어주세요.",
+    checkMic: "마이크 권한을 확인해주세요",
+    listening: "듣는 중",
+    translating: "번역 중",
+    noCaption: "자막 없음",
+  },
+  en: {
+    appTitle: "Live translated caption call",
+    nameLabel: "Name",
+    namePlaceholder: "Your name",
+    roomLabel: "Room code",
+    newRoom: "New room",
+    startCall: "Start call",
+    shareLink: "Share invite",
+    mySpeech: "Me",
+    transcriptTitle: "Transcript",
+    clear: "Clear",
+    endCall: "End",
+    toggleMic: "Toggle microphone",
+    toggleCaptions: "Toggle captions",
+    summary: "Speak in {language} and see the app in {language}",
+    waiting: "Waiting",
+    roomReady: "Room ready",
+    requestingMic: "Mic request",
+    connecting: "Connecting",
+    callReady: "Ready",
+    callActive: "On call",
+    reconnecting: "Reconnecting",
+    micBlocked: "Mic blocked",
+    peerWaiting: "Waiting for guest",
+    peerConnecting: "Connecting guest",
+    peerJoined: "Guest joined",
+    peerLeft: "Guest left",
+    connected: "Connected",
+    disconnected: "Disconnected",
+    remoteUser: "Guest",
+    remoteInitial: "?",
+    remoteCaptionReady: "The other person will appear here",
+    captionWaiting: "Waiting for translated captions",
+    localCaptionReady: "Realtime captions ready",
+    waitingPeerLanguage: "Realtime captions start when the other person joins",
+    realtimeConnecting: "Connecting Realtime captions",
+    realtimeReady: "Realtime captions connected",
+    realtimeFailed: "Realtime caption error: {message}",
+    realtimeUnavailable: "Check the Realtime API key or connection",
+    captionsOff: "Captions off",
+    captionsOn: "Captions on",
+    micOn: "Mic",
+    micOff: "Muted",
+    captionsOnLabel: "Captions",
+    captionsOffLabel: "No captions",
+    linkShared: "Invite shared",
+    linkCopied: "Invite copied",
+    inviteText: "Join my translated call.",
+    unsupportedMic: "This browser does not support microphone calls. Open it in Chrome or Samsung Internet.",
+    unsupportedCall: "This browser does not support voice calls. Open it in Chrome or Samsung Internet.",
+    checkMic: "Please check microphone permission",
+    listening: "Listening",
+    translating: "Translating",
+    noCaption: "No caption",
+  },
+  vi: {
+    appTitle: "Cuộc gọi phụ đề dịch trực tiếp",
+    nameLabel: "Tên",
+    namePlaceholder: "Tên của bạn",
+    roomLabel: "Mã phòng",
+    newRoom: "Phòng mới",
+    startCall: "Bắt đầu gọi",
+    shareLink: "Chia sẻ lời mời",
+    mySpeech: "Tôi",
+    transcriptTitle: "Nội dung trò chuyện",
+    clear: "Xóa",
+    endCall: "Kết thúc",
+    toggleMic: "Bật/tắt mic",
+    toggleCaptions: "Bật/tắt phụ đề",
+    summary: "Nói bằng {language} và xem ứng dụng bằng {language}",
+    waiting: "Đang chờ",
+    roomReady: "Phòng đã sẵn sàng",
+    requestingMic: "Yêu cầu mic",
+    connecting: "Đang kết nối",
+    callReady: "Sẵn sàng",
+    callActive: "Đang gọi",
+    reconnecting: "Đang kết nối lại",
+    micBlocked: "Mic bị chặn",
+    peerWaiting: "Đang chờ người kia",
+    peerConnecting: "Đang kết nối người kia",
+    peerJoined: "Người kia đã vào",
+    peerLeft: "Người kia đã rời",
+    connected: "Đã kết nối",
+    disconnected: "Mất kết nối",
+    remoteUser: "Người kia",
+    remoteInitial: "?",
+    remoteCaptionReady: "Lời nói của người kia sẽ hiện ở đây",
+    captionWaiting: "Đang chờ phụ đề dịch",
+    localCaptionReady: "Phụ đề Realtime đã sẵn sàng",
+    waitingPeerLanguage: "Phụ đề Realtime bắt đầu khi người kia vào",
+    realtimeConnecting: "Đang kết nối phụ đề Realtime",
+    realtimeReady: "Đã kết nối phụ đề Realtime",
+    realtimeFailed: "Lỗi phụ đề Realtime: {message}",
+    realtimeUnavailable: "Kiểm tra API key Realtime hoặc kết nối",
+    captionsOff: "Đã tắt phụ đề",
+    captionsOn: "Đã bật phụ đề",
+    micOn: "Mic",
+    micOff: "Tắt mic",
+    captionsOnLabel: "Phụ đề",
+    captionsOffLabel: "Không phụ đề",
+    linkShared: "Đã chia sẻ lời mời",
+    linkCopied: "Đã sao chép lời mời",
+    inviteText: "Hãy vào phòng gọi dịch của tôi.",
+    unsupportedMic: "Trình duyệt này không hỗ trợ gọi bằng mic. Hãy mở bằng Chrome hoặc Samsung Internet.",
+    unsupportedCall: "Trình duyệt này không hỗ trợ gọi thoại. Hãy mở bằng Chrome hoặc Samsung Internet.",
+    checkMic: "Vui lòng kiểm tra quyền mic",
+    listening: "Đang nghe",
+    translating: "Đang dịch",
+    noCaption: "Không có phụ đề",
+  },
 };
 
 const els = {
@@ -18,8 +186,9 @@ const els = {
   displayName: document.querySelector("#displayName"),
   roomCode: document.querySelector("#roomCode"),
   randomRoom: document.querySelector("#randomRoom"),
-  spokenLanguage: document.querySelector("#spokenLanguage"),
-  captionLanguage: document.querySelector("#captionLanguage"),
+  languageButton: document.querySelector("#languageButton"),
+  languageButtonText: document.querySelector("#languageButtonText"),
+  languageMenu: document.querySelector("#languageMenu"),
   joinCall: document.querySelector("#joinCall"),
   copyInviteBeforeJoin: document.querySelector("#copyInviteBeforeJoin"),
   remoteInitial: document.querySelector("#remoteInitial"),
@@ -31,7 +200,6 @@ const els = {
   localSpeech: document.querySelector("#localSpeech"),
   muteToggle: document.querySelector("#muteToggle"),
   captionToggle: document.querySelector("#captionToggle"),
-  copyLink: document.querySelector("#copyLink"),
   leaveCall: document.querySelector("#leaveCall"),
   clearTranscript: document.querySelector("#clearTranscript"),
   languageSummary: document.querySelector("#languageSummary"),
@@ -39,35 +207,32 @@ const els = {
   remoteAudio: document.querySelector("#remoteAudio"),
 };
 
-const SpeechRecognition = globalThis.SpeechRecognition || globalThis.webkitSpeechRecognition;
 const rtcConfig = {
   iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
 };
-const captionPreviewIntervalMs = 260;
-const captionPreviewTranslateDelayMs = 450;
+const realtimeIdleMs = 1400;
 
 const state = {
   clientId: createClientId(),
   room: "",
   name: "",
-  spokenLanguage: "ko",
-  captionLanguage: "ko",
+  language: "ko",
   localStream: null,
   remoteStream: createEmptyStream(),
   eventSource: null,
   peers: new Map(),
-  recognition: null,
-  recognitionActive: false,
-  recognitionRestartTimer: null,
+  peerProfiles: new Map(),
+  remotePeerId: null,
+  remoteDisplayName: "",
+  remoteLanguage: null,
+  realtime: null,
+  remoteCaptionDrafts: new Map(),
   captionsEnabled: true,
   muted: false,
   joined: false,
-  remoteDisplayName: "상대방",
-  captionDraftId: null,
-  captionPreviewText: "",
-  captionPreviewSentAt: 0,
-  captionPreviewTimer: null,
-  remoteCaptionDrafts: new Map(),
+  statusKey: "waiting",
+  callStateKey: "peerWaiting",
+  localSpeechKey: "localCaptionReady",
 };
 
 function createClientId() {
@@ -84,35 +249,104 @@ function createEmptyStream() {
   return typeof globalThis.MediaStream === "function" ? new MediaStream() : null;
 }
 
-function setRemoteAudioStream() {
-  els.remoteAudio.srcObject = state.remoteStream || null;
+function validLanguage(language) {
+  return languageMeta[language] ? language : "ko";
+}
+
+function t(key, params = {}) {
+  const value = copy[state.language]?.[key] || copy.ko[key] || key;
+  return value.replace(/\{(\w+)\}/g, (_, name) => params[name] ?? "");
 }
 
 function init() {
   const params = new URLSearchParams(location.search);
+  state.language = validLanguage(localStorage.getItem("livesub-language") || params.get("language") || "ko");
   els.roomCode.value = params.get("room") || randomRoomCode();
   els.displayName.value = localStorage.getItem("livesub-name") || "";
-  els.spokenLanguage.value = localStorage.getItem("livesub-spoken") || "ko";
-  els.captionLanguage.value = localStorage.getItem("livesub-caption") || "ko";
-  updateLanguageSummary();
+
+  applyLocale();
+  updateUrlRoom(els.roomCode.value);
 
   els.randomRoom.addEventListener("click", () => {
     els.roomCode.value = randomRoomCode();
     updateUrlRoom(els.roomCode.value);
-    setStatus("새 방 준비됨");
+    setStatusKey("roomReady");
   });
   els.roomCode.addEventListener("input", () => updateUrlRoom(els.roomCode.value));
-  els.spokenLanguage.addEventListener("change", updateLanguageSummary);
-  els.captionLanguage.addEventListener("change", updateLanguageSummary);
+  els.languageButton.addEventListener("click", toggleLanguageMenu);
+  els.languageMenu.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-language]");
+    if (!button) return;
+    setLanguage(button.dataset.language);
+    closeLanguageMenu();
+  });
+  document.addEventListener("click", (event) => {
+    if (!event.target.closest(".language-picker")) closeLanguageMenu();
+  });
   els.joinCall.addEventListener("click", joinCall);
   els.copyInviteBeforeJoin.addEventListener("click", copyInviteLink);
   els.muteToggle.addEventListener("click", toggleMute);
   els.captionToggle.addEventListener("click", toggleCaptions);
-  els.copyLink.addEventListener("click", copyInviteLink);
   els.leaveCall.addEventListener("click", leaveCall);
   els.clearTranscript.addEventListener("click", () => {
     els.transcriptList.innerHTML = "";
   });
+}
+
+function applyLocale() {
+  document.documentElement.lang = state.language;
+  document.querySelectorAll("[data-i18n]").forEach((node) => {
+    node.textContent = t(node.dataset.i18n);
+  });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach((node) => {
+    node.placeholder = t(node.dataset.i18nPlaceholder);
+  });
+  document.querySelectorAll("[data-i18n-title]").forEach((node) => {
+    node.title = t(node.dataset.i18nTitle);
+  });
+  document.querySelectorAll("[data-i18n-aria-label]").forEach((node) => {
+    node.setAttribute("aria-label", t(node.dataset.i18nAriaLabel));
+  });
+
+  els.languageButtonText.textContent = languageMeta[state.language].label;
+  els.languageMenu.querySelectorAll("[data-language]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.language === state.language);
+  });
+  els.languageSummary.textContent = t("summary", { language: languageMeta[state.language].label });
+  setStatusKey(state.statusKey, els.connectionStatus.classList.contains("live"));
+  setCallStateKey(state.callStateKey);
+  if (state.localSpeechKey) setLocalSpeechKey(state.localSpeechKey);
+  if (!els.captionSource.dataset.custom) els.captionSource.textContent = t("remoteCaptionReady");
+  if (!els.captionMain.dataset.custom) els.captionMain.textContent = t("captionWaiting");
+  renderRemoteIdentity();
+  updateControls();
+}
+
+function setLanguage(language) {
+  const nextLanguage = validLanguage(language);
+  if (state.language === nextLanguage) return;
+  state.language = nextLanguage;
+  localStorage.setItem("livesub-language", state.language);
+  applyLocale();
+  updateUrlRoom(els.roomCode.value);
+  if (state.joined) {
+    sendSignal("profile", {
+      name: state.name,
+      language: state.language,
+    }).catch(() => {});
+    if (state.captionsEnabled) restartRealtimeTranslation();
+  }
+}
+
+function toggleLanguageMenu() {
+  const nextOpen = els.languageMenu.hidden;
+  els.languageMenu.hidden = !nextOpen;
+  els.languageButton.setAttribute("aria-expanded", String(nextOpen));
+}
+
+function closeLanguageMenu() {
+  els.languageMenu.hidden = true;
+  els.languageButton.setAttribute("aria-expanded", "false");
 }
 
 function randomRoomCode() {
@@ -120,7 +354,7 @@ function randomRoomCode() {
 }
 
 function normalizeRoom(value) {
-  return value.trim().toUpperCase().replace(/[^A-Z0-9-]/g, "").slice(0, 24);
+  return String(value || "").trim().toUpperCase().replace(/[^A-Z0-9-]/g, "").slice(0, 24);
 }
 
 function updateUrlRoom(value) {
@@ -128,40 +362,53 @@ function updateUrlRoom(value) {
   if (!room) return;
   const url = new URL(location.href);
   url.searchParams.set("room", room);
+  url.searchParams.set("language", state.language);
   history.replaceState(null, "", url);
 }
 
-function setStatus(text, live = false) {
-  els.connectionStatus.textContent = text;
+function setStatusKey(key, live = false) {
+  state.statusKey = key;
+  els.connectionStatus.textContent = t(key);
   els.connectionStatus.classList.toggle("live", live);
 }
 
-function updateLanguageSummary() {
-  const spoken = languageMeta[els.spokenLanguage.value].label;
-  const caption = languageMeta[els.captionLanguage.value].label;
-  els.languageSummary.textContent = `${spoken} 음성 · ${caption} 자막`;
+function setCallStateKey(key) {
+  state.callStateKey = key;
+  els.callState.textContent = t(key);
+}
+
+function setLocalSpeechKey(key) {
+  state.localSpeechKey = key;
+  els.localSpeech.textContent = t(key);
+}
+
+function setLocalSpeechText(text) {
+  state.localSpeechKey = "";
+  els.localSpeech.textContent = text;
+}
+
+function setCaptionText(source, translated) {
+  els.captionSource.dataset.custom = source ? "true" : "";
+  els.captionMain.dataset.custom = translated ? "true" : "";
+  els.captionSource.textContent = source || t("remoteCaptionReady");
+  els.captionMain.textContent = translated || t("captionWaiting");
 }
 
 async function joinCall() {
   state.room = normalizeRoom(els.roomCode.value || randomRoomCode());
   state.name = (els.displayName.value || "Guest").trim().slice(0, 32);
-  state.spokenLanguage = els.spokenLanguage.value;
-  state.captionLanguage = els.captionLanguage.value;
   localStorage.setItem("livesub-name", state.name);
-  localStorage.setItem("livesub-spoken", state.spokenLanguage);
-  localStorage.setItem("livesub-caption", state.captionLanguage);
   updateUrlRoom(state.room);
-  updateLanguageSummary();
 
   try {
     if (!globalThis.navigator?.mediaDevices?.getUserMedia) {
-      throw new Error("이 브라우저는 마이크 통화를 지원하지 않습니다. Chrome이나 Samsung Internet으로 열어주세요.");
+      throw new Error(t("unsupportedMic"));
     }
     if (typeof (globalThis.RTCPeerConnection || globalThis.webkitRTCPeerConnection) !== "function") {
-      throw new Error("이 브라우저는 음성 통화를 지원하지 않습니다. Chrome이나 Samsung Internet으로 열어주세요.");
+      throw new Error(t("unsupportedCall"));
     }
 
-    setStatus("마이크 요청");
+    setStatusKey("requestingMic");
     state.localStream = await navigator.mediaDevices.getUserMedia({
       audio: {
         echoCancellation: true,
@@ -177,13 +424,14 @@ async function joinCall() {
     els.controls.hidden = false;
     if (!state.remoteStream) state.remoteStream = createEmptyStream();
     setRemoteAudioStream();
-    setStatus("연결 중");
+    setStatusKey("connecting");
+    setCallStateKey("peerWaiting");
+    setLocalSpeechKey("waitingPeerLanguage");
     updateControls();
     startEvents();
-    startSpeechRecognition();
   } catch (error) {
-    setStatus("마이크 차단");
-    els.callState.textContent = error.message || "마이크 권한을 확인해주세요";
+    setStatusKey("micBlocked");
+    els.callState.textContent = error.message || t("checkMic");
     console.error(error);
   }
 }
@@ -193,53 +441,100 @@ function startEvents() {
     room: state.room,
     client: state.clientId,
     name: state.name,
+    language: state.language,
   });
   state.eventSource = new EventSource(`/api/events?${params.toString()}`);
   state.eventSource.addEventListener("ready", (event) => {
     const payload = JSON.parse(event.data);
-    setStatus("통화 가능", true);
-    els.callState.textContent = payload.peers.length ? "상대방 연결 중" : "상대방 대기 중";
-    for (const peerId of payload.peers) connectToPeer(peerId, true);
+    setStatusKey("callReady", true);
+    const peers = (payload.peers || []).map(normalizePeerProfile).filter(Boolean);
+    setCallStateKey(peers.length ? "peerConnecting" : "peerWaiting");
+    for (const peer of peers) {
+      setRemoteProfile(peer);
+      connectToPeer(peer.id, true);
+    }
+    maybeStartRealtimeTranslation();
   });
   state.eventSource.addEventListener("peer-joined", (event) => {
-    const payload = JSON.parse(event.data);
-    state.remoteDisplayName = payload.name || "상대방";
-    renderRemoteIdentity();
-    els.callState.textContent = "상대방 입장";
-    connectToPeer(payload.from, false);
+    const payload = normalizePeerProfile(JSON.parse(event.data));
+    if (!payload) return;
+    setRemoteProfile(payload);
+    setCallStateKey("peerJoined");
+    connectToPeer(payload.id, false);
+    maybeStartRealtimeTranslation();
   });
   state.eventSource.addEventListener("peer-left", (event) => {
     const payload = JSON.parse(event.data);
     closePeer(payload.from);
-    els.callState.textContent = "상대방 퇴장";
+    state.peerProfiles.delete(payload.from);
+    if (state.remotePeerId === payload.from) {
+      state.remotePeerId = null;
+      state.remoteLanguage = null;
+      state.remoteDisplayName = "";
+      renderRemoteIdentity();
+      closeRealtimeTranslation();
+      setLocalSpeechKey("waitingPeerLanguage");
+    }
+    setCallStateKey("peerLeft");
   });
   state.eventSource.addEventListener("signal", (event) => {
-    handleSignal(JSON.parse(event.data));
+    handleSignal(JSON.parse(event.data)).catch(console.error);
   });
   state.eventSource.onerror = () => {
-    setStatus("재연결 중");
+    setStatusKey("reconnecting");
   };
 }
 
+function normalizePeerProfile(peer) {
+  if (!peer) return null;
+  if (typeof peer === "string") {
+    return { id: peer, name: t("remoteUser"), language: null };
+  }
+  const id = peer.id || peer.from;
+  if (!id || id === state.clientId) return null;
+  return {
+    id,
+    name: String(peer.name || t("remoteUser")).slice(0, 40),
+    language: languageMeta[peer.language] ? peer.language : null,
+  };
+}
+
+function setRemoteProfile(profile) {
+  state.peerProfiles.set(profile.id, profile);
+  state.remotePeerId = profile.id;
+  state.remoteDisplayName = profile.name || state.remoteDisplayName || t("remoteUser");
+  state.remoteLanguage = profile.language || state.remoteLanguage;
+  renderRemoteIdentity();
+  if (state.captionsEnabled && state.remoteLanguage && state.joined) {
+    maybeStartRealtimeTranslation();
+  }
+}
+
 function renderRemoteIdentity() {
-  els.remoteName.textContent = state.remoteDisplayName;
-  els.remoteInitial.textContent = state.remoteDisplayName.trim().slice(0, 1).toUpperCase() || "?";
+  const name = state.remoteDisplayName || t("remoteUser");
+  els.remoteName.textContent = name;
+  els.remoteInitial.textContent = name.trim().slice(0, 1).toUpperCase() || t("remoteInitial");
+}
+
+function setRemoteAudioStream() {
+  els.remoteAudio.srcObject = state.remoteStream || null;
 }
 
 function connectToPeer(peerId, shouldOffer) {
   if (state.peers.has(peerId)) return state.peers.get(peerId);
   const PeerConnection = globalThis.RTCPeerConnection || globalThis.webkitRTCPeerConnection;
   if (typeof PeerConnection !== "function") {
-    els.callState.textContent = "이 브라우저는 음성 통화를 지원하지 않습니다";
+    setCallStateKey("disconnected");
     return null;
   }
+
   const peer = new PeerConnection(rtcConfig);
   state.peers.set(peerId, peer);
 
   for (const track of state.localStream?.getTracks() || []) peer.addTrack(track, state.localStream);
 
   peer.addEventListener("icecandidate", (event) => {
-    if (event.candidate) sendSignal("ice", event.candidate, peerId);
+    if (event.candidate) sendSignal("ice", event.candidate, peerId).catch(() => {});
   });
   peer.addEventListener("track", (event) => {
     if (!state.remoteStream) state.remoteStream = createEmptyStream();
@@ -250,22 +545,21 @@ function connectToPeer(peerId, shouldOffer) {
       }
     }
     setRemoteAudioStream();
-    els.callState.textContent = "연결됨";
+    els.remoteAudio.play().catch(() => {});
+    setCallStateKey("connected");
     animateVoice();
   });
   peer.addEventListener("connectionstatechange", () => {
     if (peer.connectionState === "connected") {
-      setStatus("통화 중", true);
-      els.callState.textContent = "연결됨";
+      setStatusKey("callActive", true);
+      setCallStateKey("connected");
     }
     if (["failed", "disconnected", "closed"].includes(peer.connectionState)) {
-      els.callState.textContent = "연결 끊김";
+      setCallStateKey("disconnected");
     }
   });
 
-  if (shouldOffer) {
-    makeOffer(peerId, peer);
-  }
+  if (shouldOffer) makeOffer(peerId, peer).catch(console.error);
   return peer;
 }
 
@@ -277,12 +571,17 @@ async function makeOffer(peerId, peer) {
 
 async function handleSignal(message) {
   if (message.from === state.clientId) return;
-  if (message.type === "caption-preview") {
-    handleRemoteCaptionPreview(message);
+  if (message.type === "profile") {
+    setRemoteProfile(normalizePeerProfile({ id: message.from, ...message.data }));
+    restartRealtimeTranslation();
     return;
   }
-  if (message.type === "caption") {
-    handleRemoteCaption(message);
+  if (message.type === "translated-caption-preview") {
+    handleTranslatedCaption(message, false);
+    return;
+  }
+  if (message.type === "translated-caption") {
+    handleTranslatedCaption(message, true);
     return;
   }
 
@@ -316,262 +615,255 @@ async function sendSignal(type, data, to = null) {
   });
 }
 
-function startSpeechRecognition() {
-  if (!SpeechRecognition) {
-    els.localSpeech.textContent = "이 브라우저는 실시간 음성 인식을 지원하지 않습니다";
+function maybeStartRealtimeTranslation() {
+  if (!state.joined || !state.captionsEnabled || !state.localStream) return;
+  if (!state.remoteLanguage) {
+    setLocalSpeechKey("waitingPeerLanguage");
     return;
   }
-  stopSpeechRecognition();
-
-  const recognition = new SpeechRecognition();
-  state.recognition = recognition;
-  recognition.lang = languageMeta[state.spokenLanguage].speechCode;
-  recognition.continuous = true;
-  recognition.interimResults = true;
-
-  recognition.addEventListener("start", () => {
-    state.recognitionActive = true;
+  if (state.realtime?.active && state.realtime.targetLanguage === state.remoteLanguage) return;
+  startRealtimeTranslation().catch((error) => {
+    console.error(error);
+    closeRealtimeTranslation();
+    setLocalSpeechText(t("realtimeFailed", { message: error.message || t("realtimeUnavailable") }));
   });
-  recognition.addEventListener("result", (event) => {
-    let interim = "";
-    for (let index = event.resultIndex; index < event.results.length; index += 1) {
-      const result = event.results[index];
-      const text = result[0].transcript.trim();
-      if (!text) continue;
-      if (result.isFinal) publishLocalCaption(text);
-      else interim += `${text} `;
-    }
-    if (interim.trim()) {
-      const previewText = interim.trim();
-      els.localSpeech.textContent = previewText;
-      queueLocalCaptionPreview(previewText);
-    }
-  });
-  recognition.addEventListener("end", () => {
-    state.recognitionActive = false;
-    if (state.recognition !== recognition || !state.joined || !state.captionsEnabled || document.hidden) return;
-    clearTimeout(state.recognitionRestartTimer);
-    state.recognitionRestartTimer = setTimeout(startRecognitionSafely, 1200);
-  });
-  recognition.addEventListener("error", (event) => {
-    state.recognitionActive = false;
-    if (["not-allowed", "service-not-allowed"].includes(event.error)) {
-      state.captionsEnabled = false;
-      els.localSpeech.textContent = "브라우저 마이크 권한을 허용하면 자막이 다시 시작됩니다";
-      updateControls();
-      return;
-    }
-    if (event.error !== "no-speech") els.localSpeech.textContent = `자막 오류: ${event.error}`;
-  });
-  startRecognitionSafely();
 }
 
-function startRecognitionSafely() {
-  if (!state.recognition || state.recognitionActive || !state.joined || !state.captionsEnabled) return;
+function restartRealtimeTranslation() {
+  if (!state.joined || !state.captionsEnabled) return;
+  closeRealtimeTranslation();
+  maybeStartRealtimeTranslation();
+}
+
+async function startRealtimeTranslation() {
+  closeRealtimeTranslation();
+  const targetLanguage = state.remoteLanguage;
+  if (!targetLanguage) {
+    setLocalSpeechKey("waitingPeerLanguage");
+    return;
+  }
+
+  setLocalSpeechKey("realtimeConnecting");
+  const secretResponse = await fetch("/api/realtime/translation-token", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      targetLanguage,
+      clientId: state.clientId,
+    }),
+  });
+  const secretPayload = await secretResponse.json().catch(() => ({}));
+  if (!secretResponse.ok) {
+    throw new Error(secretPayload.error || t("realtimeUnavailable"));
+  }
+  const clientSecret =
+    secretPayload.value ||
+    secretPayload.client_secret?.value ||
+    secretPayload.client_secret ||
+    secretPayload.secret?.value;
+  if (!clientSecret) throw new Error(t("realtimeUnavailable"));
+
+  const PeerConnection = globalThis.RTCPeerConnection || globalThis.webkitRTCPeerConnection;
+  const pc = new PeerConnection();
+  const dataChannel = pc.createDataChannel("oai-events");
+  const realtime = {
+    pc,
+    dataChannel,
+    targetLanguage,
+    captionId: createCaptionId(),
+    sourceText: "",
+    outputText: "",
+    idleTimer: null,
+    localItem: null,
+    active: true,
+  };
+  state.realtime = realtime;
+
+  for (const track of state.localStream.getAudioTracks()) {
+    pc.addTrack(track, state.localStream);
+  }
+
+  dataChannel.addEventListener("open", () => {
+    if (state.realtime === realtime) setLocalSpeechKey("realtimeReady");
+  });
+  dataChannel.addEventListener("message", (event) => {
+    if (state.realtime !== realtime) return;
+    handleRealtimeEvent(JSON.parse(event.data));
+  });
+  dataChannel.addEventListener("close", () => {
+    if (state.realtime === realtime && state.captionsEnabled) setLocalSpeechKey("realtimeConnecting");
+  });
+  pc.addEventListener("connectionstatechange", () => {
+    if (state.realtime !== realtime) return;
+    if (pc.connectionState === "connected") setLocalSpeechKey("realtimeReady");
+    if (["failed", "disconnected"].includes(pc.connectionState)) {
+      setLocalSpeechText(t("realtimeFailed", { message: pc.connectionState }));
+    }
+  });
+
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
+  const answerResponse = await fetch("https://api.openai.com/v1/realtime/translations/calls", {
+    method: "POST",
+    body: offer.sdp,
+    headers: {
+      "authorization": `Bearer ${clientSecret}`,
+      "content-type": "application/sdp",
+    },
+  });
+  if (!answerResponse.ok) {
+    const errorText = await answerResponse.text().catch(() => "");
+    throw new Error(errorText || `OpenAI Realtime failed with ${answerResponse.status}`);
+  }
+  const answer = {
+    type: "answer",
+    sdp: await answerResponse.text(),
+  };
+  await pc.setRemoteDescription(answer);
+}
+
+function handleRealtimeEvent(event) {
+  if (event.type === "error") {
+    setLocalSpeechText(t("realtimeFailed", { message: event.error?.message || "unknown" }));
+    return;
+  }
+
+  const delta = getRealtimeText(event);
+  if (delta === "") return;
+
+  const realtime = state.realtime;
+  if (!realtime) return;
+  if (event.type.includes("input_transcript")) {
+    realtime.sourceText += delta;
+    setLocalSpeechText(realtime.sourceText.trim() || t("listening"));
+    updateLocalRealtimeItem(false);
+  }
+  if (event.type.includes("output_transcript")) {
+    realtime.outputText += delta;
+    updateLocalRealtimeItem(false);
+    publishRealtimeCaption(false);
+  }
+
+  if (event.type.endsWith(".done") || event.type.endsWith(".completed")) {
+    finishRealtimeCaption();
+    return;
+  }
+  scheduleRealtimeIdle();
+}
+
+function getRealtimeText(event) {
+  const value = event.delta ?? event.text ?? event.transcript ?? event.output_text ?? "";
+  return String(value);
+}
+
+function scheduleRealtimeIdle() {
+  const realtime = state.realtime;
+  if (!realtime) return;
+  clearTimeout(realtime.idleTimer);
+  realtime.idleTimer = setTimeout(finishRealtimeCaption, realtimeIdleMs);
+}
+
+function publishRealtimeCaption(final) {
+  const realtime = state.realtime;
+  if (!realtime || !realtime.outputText.trim()) return;
+  sendSignal(final ? "translated-caption" : "translated-caption-preview", {
+    id: realtime.captionId,
+    original: realtime.sourceText.trim(),
+    text: realtime.outputText.trim(),
+    sourceLanguage: state.language,
+    targetLanguage: realtime.targetLanguage,
+    speakerName: state.name,
+    at: Date.now(),
+  }).catch(() => {});
+}
+
+function updateLocalRealtimeItem(final) {
+  const realtime = state.realtime;
+  if (!realtime) return;
+  const original = realtime.sourceText.trim() || t("listening");
+  const translation = realtime.outputText.trim() || t("translating");
+  const status = `${languageMeta[state.language].label} → ${languageMeta[realtime.targetLanguage]?.label || ""}`;
+  if (!realtime.localItem) {
+    realtime.localItem = appendTranscript({
+      speaker: state.name,
+      original,
+      translation,
+      local: true,
+      status,
+    });
+  } else {
+    realtime.localItem.querySelector(".transcript-original").textContent = original;
+    realtime.localItem.querySelector(".transcript-translation").textContent = translation;
+    realtime.localItem.querySelector(".transcript-meta span").textContent = `${state.name} · ${status}`;
+  }
+  realtime.localItem.classList.toggle("preview", !final);
+}
+
+function finishRealtimeCaption() {
+  const realtime = state.realtime;
+  if (!realtime) return;
+  clearTimeout(realtime.idleTimer);
+  realtime.idleTimer = null;
+  if (realtime.sourceText.trim() || realtime.outputText.trim()) {
+    updateLocalRealtimeItem(true);
+    publishRealtimeCaption(true);
+  }
+  realtime.captionId = createCaptionId();
+  realtime.sourceText = "";
+  realtime.outputText = "";
+  realtime.localItem = null;
+  if (state.captionsEnabled && state.joined) setLocalSpeechKey("realtimeReady");
+}
+
+function closeRealtimeTranslation() {
+  const realtime = state.realtime;
+  if (!realtime) return;
+  clearTimeout(realtime.idleTimer);
   try {
-    state.recognition.start();
-  } catch (error) {
-    if (error.name !== "InvalidStateError") {
-      els.localSpeech.textContent = `자막 오류: ${error.message}`;
-    }
-  }
-}
-
-function stopSpeechRecognition() {
-  clearTimeout(state.recognitionRestartTimer);
-  state.recognitionRestartTimer = null;
-  clearTimeout(state.captionPreviewTimer);
-  state.captionPreviewTimer = null;
-  state.captionPreviewText = "";
-  state.captionDraftId = null;
-  if (state.recognition) {
-    try {
-      state.recognition.stop();
-    } catch {}
-  }
-  state.recognitionActive = false;
+    realtime.dataChannel?.close();
+  } catch {}
+  try {
+    realtime.pc?.close();
+  } catch {}
+  state.realtime = null;
 }
 
 function createCaptionId() {
   return `${state.clientId}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function activeCaptionId() {
-  if (!state.captionDraftId) state.captionDraftId = createCaptionId();
-  return state.captionDraftId;
-}
+function handleTranslatedCaption(message, final) {
+  const payload = message.data || {};
+  if (!payload.text) return;
 
-function queueLocalCaptionPreview(text) {
-  if (!state.captionsEnabled || !text) return;
-  if (text === state.captionPreviewText) return;
-  state.captionPreviewText = text;
-
-  const now = Date.now();
-  const wait = Math.max(0, captionPreviewIntervalMs - (now - state.captionPreviewSentAt));
-  clearTimeout(state.captionPreviewTimer);
-  state.captionPreviewTimer = setTimeout(() => {
-    state.captionPreviewSentAt = Date.now();
-    sendSignal("caption-preview", {
-      id: activeCaptionId(),
-      text: state.captionPreviewText,
-      sourceLanguage: state.spokenLanguage,
-      speakerName: state.name,
-      at: Date.now(),
-    }).catch(() => {});
-  }, wait);
-}
-
-function publishLocalCaption(text) {
-  if (!state.captionsEnabled) return;
-  const captionId = activeCaptionId();
-  clearTimeout(state.captionPreviewTimer);
-  state.captionPreviewTimer = null;
-  state.captionPreviewText = "";
-  state.captionDraftId = null;
-  els.localSpeech.textContent = text;
-  appendTranscript({
-    speaker: state.name,
-    original: text,
-    translation: text,
-    local: true,
-    status: languageMeta[state.spokenLanguage].label,
-  });
-  sendSignal("caption", {
-    id: captionId,
-    text,
-    sourceLanguage: state.spokenLanguage,
-    speakerName: state.name,
-    at: Date.now(),
-  }).catch(() => {});
-}
-
-function captionKey(message, payload) {
-  return payload.id || `${message.from}-${payload.at || ""}`;
-}
-
-function captionStatus(sourceLanguage) {
-  return `${languageMeta[sourceLanguage]?.label || "원문"} → ${languageMeta[state.captionLanguage].label}`;
-}
-
-async function translateCaption(text, sourceLanguage) {
-  if (sourceLanguage === state.captionLanguage) {
-    return { translatedText: text, mode: "same-language" };
-  }
-  const response = await fetch("/api/translate", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({
-      text,
-      sourceLanguage,
-      targetLanguage: state.captionLanguage,
-    }),
-  });
-  const result = await response.json();
-  if (!response.ok) throw new Error(result.error || "번역 실패");
-  return result;
-}
-
-function handleRemoteCaptionPreview(message) {
-  const payload = message.data;
-  if (!payload?.text || !payload.sourceLanguage) return;
-  const speaker = payload.speakerName || "상대방";
+  const speaker = payload.speakerName || t("remoteUser");
   state.remoteDisplayName = speaker;
   renderRemoteIdentity();
-  els.captionSource.textContent = payload.text;
-  animateVoice();
 
-  const key = captionKey(message, payload);
+  const key = payload.id || `${message.from}-${payload.at || Date.now()}`;
   let draft = state.remoteCaptionDrafts.get(key);
+  const status = `${languageMeta[payload.sourceLanguage]?.label || ""} → ${languageMeta[payload.targetLanguage]?.label || languageMeta[state.language].label}`;
   if (!draft) {
-    const item = appendTranscript({
-      speaker,
-      original: payload.text,
-      translation: "번역 준비 중...",
-      local: false,
-      status: captionStatus(payload.sourceLanguage),
-    });
-    item.classList.add("preview");
     draft = {
-      item,
-      text: payload.text,
-      sourceLanguage: payload.sourceLanguage,
-      timer: null,
-      token: 0,
-      lastTranslation: "",
+      item: appendTranscript({
+        speaker,
+        original: payload.original || t("noCaption"),
+        translation: payload.text,
+        local: false,
+        status,
+      }),
     };
     state.remoteCaptionDrafts.set(key, draft);
+  } else {
+    draft.item.querySelector(".transcript-original").textContent = payload.original || t("noCaption");
+    draft.item.querySelector(".transcript-translation").textContent = payload.text;
+    draft.item.querySelector(".transcript-meta span").textContent = `${speaker} · ${status}`;
   }
 
-  draft.text = payload.text;
-  draft.sourceLanguage = payload.sourceLanguage;
-  draft.item.querySelector(".transcript-original").textContent = payload.text;
-  draft.item.querySelector(".transcript-meta span").textContent = `${speaker} · ${captionStatus(payload.sourceLanguage)}`;
-  els.captionMain.textContent = draft.lastTranslation || "번역 준비 중...";
-  schedulePreviewTranslation(key, draft);
-}
-
-function schedulePreviewTranslation(key, draft) {
-  clearTimeout(draft.timer);
-  const token = (draft.token += 1);
-  draft.timer = setTimeout(async () => {
-    const text = draft.text;
-    try {
-      const result = await translateCaption(text, draft.sourceLanguage);
-      if (state.remoteCaptionDrafts.get(key) !== draft || draft.token !== token) return;
-      draft.lastTranslation = result.translatedText;
-      updateTranscript(draft.item, result.translatedText, result.mode);
-      if (els.captionSource.textContent === text) els.captionMain.textContent = result.translatedText;
-    } catch (error) {
-      if (state.remoteCaptionDrafts.get(key) !== draft || draft.token !== token) return;
-      const fallback = `번역 실패: ${error.message}`;
-      updateTranscript(draft.item, fallback, "error");
-      if (els.captionSource.textContent === text) els.captionMain.textContent = fallback;
-    }
-  }, captionPreviewTranslateDelayMs);
-}
-
-async function handleRemoteCaption(message) {
-  const payload = message.data;
-  if (!payload?.text || !payload.sourceLanguage) return;
-  const speaker = payload.speakerName || "상대방";
-  const key = captionKey(message, payload);
-  const draft = state.remoteCaptionDrafts.get(key);
-  let item = draft?.item;
-
-  if (draft) {
-    clearTimeout(draft.timer);
-    draft.token += 1;
-    state.remoteCaptionDrafts.delete(key);
-    item.classList.remove("preview");
-    item.querySelector(".transcript-original").textContent = payload.text;
-    item.querySelector(".transcript-meta span").textContent = `${speaker} · ${captionStatus(payload.sourceLanguage)}`;
-  }
-
-  state.remoteDisplayName = speaker;
-  renderRemoteIdentity();
-  els.captionSource.textContent = payload.text;
-  els.captionMain.textContent = draft?.lastTranslation || "번역 중...";
+  draft.item.classList.toggle("preview", !final);
+  if (final) state.remoteCaptionDrafts.delete(key);
+  setCaptionText(payload.original || "", payload.text);
   animateVoice();
-
-  if (!item) {
-    item = appendTranscript({
-      speaker,
-      original: payload.text,
-      translation: "번역 중...",
-      local: false,
-      status: captionStatus(payload.sourceLanguage),
-    });
-  }
-
-  try {
-    const result = await translateCaption(payload.text, payload.sourceLanguage);
-    updateTranscript(item, result.translatedText, result.mode);
-    els.captionMain.textContent = result.translatedText;
-  } catch (error) {
-    const fallback = `번역 실패: ${error.message}`;
-    updateTranscript(item, fallback, "error");
-    els.captionMain.textContent = fallback;
-  }
 }
 
 function appendTranscript({ speaker, original, translation, local, status }) {
@@ -594,20 +886,12 @@ function appendTranscript({ speaker, original, translation, local, status }) {
   return item;
 }
 
-function updateTranscript(item, translation, mode) {
-  item.querySelector(".transcript-translation").textContent = translation;
-  if (mode === "demo") {
-    const meta = item.querySelector(".transcript-meta span");
-    if (!meta.textContent.includes("데모")) meta.textContent = `${meta.textContent} · 데모`;
-  }
-}
-
 function animateVoice() {
   els.voiceRing.classList.add("speaking");
   clearTimeout(animateVoice.timer);
   animateVoice.timer = setTimeout(() => {
     els.voiceRing.classList.remove("speaking");
-  }, 1200);
+  }, 1100);
 }
 
 function toggleMute() {
@@ -621,19 +905,23 @@ function toggleMute() {
 function toggleCaptions() {
   state.captionsEnabled = !state.captionsEnabled;
   if (state.captionsEnabled) {
-    if (state.recognition) startRecognitionSafely();
-    else startSpeechRecognition();
+    setLocalSpeechKey("captionsOn");
+    maybeStartRealtimeTranslation();
   } else {
-    stopSpeechRecognition();
+    finishRealtimeCaption();
+    closeRealtimeTranslation();
+    setLocalSpeechKey("captionsOff");
   }
   updateControls();
 }
 
 function updateControls() {
   els.muteToggle.classList.toggle("active", !state.muted);
-  els.muteToggle.querySelector("span").textContent = state.muted ? "Muted" : "Mic";
   els.captionToggle.classList.toggle("active", state.captionsEnabled);
-  els.captionToggle.querySelector("span").textContent = state.captionsEnabled ? "CC" : "No CC";
+  const micLabel = els.muteToggle.querySelector("[data-control-label='mic']");
+  const captionLabel = els.captionToggle.querySelector("[data-control-label='captions']");
+  micLabel.textContent = state.muted ? t("micOff") : t("micOn");
+  captionLabel.textContent = state.captionsEnabled ? t("captionsOnLabel") : t("captionsOffLabel");
 }
 
 async function copyInviteLink() {
@@ -642,30 +930,28 @@ async function copyInviteLink() {
   els.roomCode.value = room;
   updateUrlRoom(room);
   url.searchParams.set("room", room);
+  url.searchParams.set("language", state.language);
   const inviteUrl = url.toString();
   const shareData = {
     title: "LiveSub Call",
-    text: "번역 통화방에 들어와 주세요.",
+    text: t("inviteText"),
     url: inviteUrl,
   };
 
   try {
     if (navigator.share) {
       await navigator.share(shareData);
-      if (state.joined) els.callState.textContent = "초대 링크 공유됨";
-      else setStatus("링크 공유됨");
+      setStatusKey("linkShared", state.joined);
       return;
     }
     await navigator.clipboard.writeText(inviteUrl);
-    if (state.joined) els.callState.textContent = "초대 링크 복사됨";
-    else setStatus("링크 복사됨");
+    setStatusKey("linkCopied", state.joined);
   } catch {
     try {
       await navigator.clipboard.writeText(inviteUrl);
-      if (state.joined) els.callState.textContent = "초대 링크 복사됨";
-      else setStatus("링크 복사됨");
+      setStatusKey("linkCopied", state.joined);
     } catch {
-      window.prompt("초대 링크", inviteUrl);
+      window.prompt("LiveSub Call", inviteUrl);
     }
   }
 }
@@ -683,25 +969,32 @@ function leaveCall() {
   state.joined = false;
   state.eventSource?.close();
   state.eventSource = null;
-  stopSpeechRecognition();
-  for (const draft of state.remoteCaptionDrafts.values()) clearTimeout(draft.timer);
-  state.remoteCaptionDrafts.clear();
-  state.recognition = null;
+  closeRealtimeTranslation();
   for (const peer of state.peers.values()) peer.close();
   state.peers.clear();
+  state.peerProfiles.clear();
+  state.remoteCaptionDrafts.clear();
   for (const track of state.localStream?.getTracks() || []) track.stop();
   for (const track of state.remoteStream?.getTracks() || []) track.stop();
   state.localStream = null;
   state.remoteStream = createEmptyStream();
+  state.remotePeerId = null;
+  state.remoteLanguage = null;
+  state.remoteDisplayName = "";
   setRemoteAudioStream();
   els.stage.hidden = true;
   els.controls.hidden = true;
   els.joinPanel.hidden = false;
-  setStatus("대기 중");
+  setCaptionText("", "");
+  setStatusKey("waiting");
+  setCallStateKey("peerWaiting");
+  setLocalSpeechKey("localCaptionReady");
+  renderRemoteIdentity();
 }
 
 window.addEventListener("beforeunload", () => {
   state.eventSource?.close();
+  closeRealtimeTranslation();
   for (const track of state.localStream?.getTracks() || []) track.stop();
 });
 

@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>LiveSub Call</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="call-surface" aria-label="통화 화면">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">LiveSub Call</p>
+            <h1>실시간 번역 자막 통화</h1>
+          </div>
+          <div class="status-pill" id="connectionStatus">대기 중</div>
+        </header>
+
+        <section class="join-panel" id="joinPanel">
+          <div class="field-grid">
+            <label>
+              이름
+              <input id="displayName" maxlength="32" autocomplete="name" placeholder="내 이름">
+            </label>
+            <label>
+              방 코드
+              <div class="inline-field">
+                <input id="roomCode" maxlength="24" autocomplete="off" spellcheck="false">
+                <button class="icon-button" id="randomRoom" type="button" title="방 코드 만들기" aria-label="방 코드 만들기">
+                  <span aria-hidden="true">+</span>
+                </button>
+              </div>
+            </label>
+            <label>
+              내 음성
+              <select id="spokenLanguage">
+                <option value="ko">한국어</option>
+                <option value="en">English</option>
+                <option value="vi">Tiếng Việt</option>
+              </select>
+            </label>
+            <label>
+              내 자막
+              <select id="captionLanguage">
+                <option value="ko">한국어</option>
+                <option value="en">English</option>
+                <option value="vi">Tiếng Việt</option>
+              </select>
+            </label>
+          </div>
+          <div class="join-actions">
+            <button class="primary-action" id="joinCall" type="button">통화 시작</button>
+            <button class="secondary-action" id="copyInviteBeforeJoin" type="button">초대 링크 공유</button>
+          </div>
+        </section>
+
+        <section class="stage" id="stage" hidden>
+          <div class="participant">
+            <div class="avatar-ring" id="voiceRing">
+              <span id="remoteInitial">?</span>
+            </div>
+            <p class="participant-name" id="remoteName">상대방</p>
+            <p class="participant-state" id="callState">연결 준비 중</p>
+          </div>
+
+          <div class="caption-window" aria-live="polite">
+            <p class="caption-source" id="captionSource">상대방 말이 여기에 표시됩니다</p>
+            <p class="caption-main" id="captionMain">번역 자막 대기 중</p>
+          </div>
+
+          <div class="local-strip">
+            <span>내 말</span>
+            <p id="localSpeech">마이크를 켜고 말하면 표시됩니다</p>
+          </div>
+        </section>
+
+        <footer class="controls" id="controls" hidden>
+          <button class="control-button" id="muteToggle" type="button" title="마이크 켜기/끄기" aria-label="마이크 켜기/끄기">
+            <span aria-hidden="true">Mic</span>
+          </button>
+          <button class="control-button" id="captionToggle" type="button" title="자막 켜기/끄기" aria-label="자막 켜기/끄기">
+            <span aria-hidden="true">CC</span>
+          </button>
+          <button class="control-button" id="copyLink" type="button" title="초대 링크 복사" aria-label="초대 링크 복사">
+            <span aria-hidden="true">Link</span>
+          </button>
+          <button class="control-button danger" id="leaveCall" type="button" title="통화 종료" aria-label="통화 종료">
+            <span aria-hidden="true">End</span>
+          </button>
+        </footer>
+      </section>
+
+      <aside class="transcript-panel" aria-label="대화 기록">
+        <div class="panel-header">
+          <h2>대화 기록</h2>
+          <button class="ghost-button" id="clearTranscript" type="button">지우기</button>
+        </div>
+        <div class="language-row">
+          <span id="languageSummary">한국어 음성 · 한국어 자막</span>
+        </div>
+        <ol class="transcript-list" id="transcriptList"></ol>
+      </aside>
+    </main>
+
+    <audio id="remoteAudio" autoplay playsinline></audio>
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

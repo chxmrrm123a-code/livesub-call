@@ -41,9 +41,12 @@ function broadcast(roomId, event, payload, exceptClientId = null) {
   }
 }
 
-async function readJson(req) {
+async function readJson(req, limit = 1_000_000) {
   let body = "";
-  for await (const chunk of req) body += chunk;
+  for await (const chunk of req) {
+    body += chunk;
+    if (Buffer.byteLength(body) > limit) throw new Error("Request body is too large");
+  }
   if (!body) return {};
   return JSON.parse(body);
 }
@@ -162,6 +165,7 @@ async function handleEvents(req, res, url) {
   const roomId = cleanRoomId(url.searchParams.get("room"));
   const clientId = cleanClientId(url.searchParams.get("client"));
   const name = String(url.searchParams.get("name") || "Guest").slice(0, 40);
+  const language = validateLanguage(url.searchParams.get("language")) || "ko";
   if (!roomId || !clientId) {
     json(res, 400, { error: "Missing room or client" });
     return;
@@ -176,14 +180,20 @@ async function handleEvents(req, res, url) {
   res.write("\n");
 
   const clients = roomClients(roomId);
-  const peerIds = [...clients.keys()].filter((id) => id !== clientId);
+  const peerProfiles = [...clients.entries()]
+    .filter(([id]) => id !== clientId)
+    .map(([id, client]) => ({
+      id,
+      name: client.name,
+      language: client.language,
+    }));
   const existing = clients.get(clientId);
   if (existing) existing.res.end();
-  const client = { id: clientId, name, res };
+  const client = { id: clientId, name, language, res };
   clients.set(clientId, client);
 
-  sendSse(client, "ready", { room: roomId, client: clientId, peers: peerIds });
-  broadcast(roomId, "peer-joined", { from: clientId, name }, clientId);
+  sendSse(client, "ready", { room: roomId, client: clientId, peers: peerProfiles });
+  broadcast(roomId, "peer-joined", { from: clientId, id: clientId, name, language }, clientId);
 
   const keepAlive = setInterval(() => {
     try {
@@ -219,6 +229,12 @@ async function handleSignal(req, res) {
 
   const payload = { from, to, type, data, sentAt: Date.now() };
   const clients = roomClients(roomId);
+  if (type === "profile" && clients.has(from)) {
+    const client = clients.get(from);
+    const language = validateLanguage(data.language);
+    if (language) client.language = language;
+    if (data.name) client.name = String(data.name).slice(0, 40);
+  }
   if (to && clients.has(to)) {
     sendSse(clients.get(to), "signal", payload);
   } else {
@@ -253,6 +269,52 @@ async function handleTranslate(req, res) {
   }
 }
 
+async function handleRealtimeTranslationToken(req, res) {
+  try {
+    const body = await readJson(req, 20_000);
+    const targetLanguage = validateLanguage(body.targetLanguage);
+    const clientId = cleanClientId(body.clientId);
+    if (!targetLanguage) {
+      json(res, 400, { error: "Missing supported target language" });
+      return;
+    }
+    if (!process.env.OPENAI_API_KEY) {
+      json(res, 503, { error: "OpenAI API key is not configured" });
+      return;
+    }
+
+    const model = process.env.OPENAI_REALTIME_TRANSLATION_MODEL || "gpt-realtime-translate";
+    const response = await fetch("https://api.openai.com/v1/realtime/translations/client_secrets", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+        ...(clientId ? { "openai-safety-identifier": `livesub-${clientId}` } : {}),
+      },
+      body: JSON.stringify({
+        session: {
+          model,
+          audio: {
+            output: {
+              language: targetLanguage,
+            },
+          },
+        },
+      }),
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const message = payload.error?.message || `OpenAI Realtime request failed with ${response.status}`;
+      json(res, response.status >= 400 && response.status < 600 ? response.status : 500, { error: message });
+      return;
+    }
+    json(res, 200, payload);
+  } catch (error) {
+    json(res, 500, { error: error.message || "Realtime token failed" });
+  }
+}
+
 async function serveStatic(req, res, url) {
   const requestPath = decodeURIComponent(url.pathname === "/" ? "/index.html" : url.pathname);
   const safePath = path
@@ -276,6 +338,7 @@ const server = http.createServer(async (req, res) => {
     if (req.method === "GET" && url.pathname === "/api/events") return handleEvents(req, res, url);
     if (req.method === "POST" && url.pathname === "/api/signal") return handleSignal(req, res);
     if (req.method === "POST" && url.pathname === "/api/translate") return handleTranslate(req, res);
+    if (req.method === "POST" && url.pathname === "/api/realtime/translation-token") return handleRealtimeTranslationToken(req, res);
     if (req.method === "GET") return serveStatic(req, res, url);
     json(res, 405, { error: "Method not allowed" });
   } catch (error) {

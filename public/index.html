@@ -8,6 +8,113 @@
   </head>
   <body>
     <main class="app-shell">
+      <section class="call-surface" aria-label="Call">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">LiveSub Call</p>
+            <h1 data-i18n="appTitle">실시간 번역 자막 통화</h1>
+          </div>
+
+          <div class="top-actions">
+            <div class="language-picker">
+              <button class="language-button" id="languageButton" type="button" aria-haspopup="true" aria-expanded="false">
+                <span class="globe-icon" aria-hidden="true"></span>
+                <span id="languageButtonText">한국어</span>
+              </button>
+              <div class="language-menu" id="languageMenu" hidden>
+                <button type="button" data-language="ko">한국어</button>
+                <button type="button" data-language="en">English</button>
+                <button type="button" data-language="vi">Tiếng Việt</button>
+              </div>
+            </div>
+            <div class="status-pill" id="connectionStatus">대기 중</div>
+          </div>
+        </header>
+
+        <section class="join-panel" id="joinPanel">
+          <div class="field-grid">
+            <label>
+              <span data-i18n="nameLabel">이름</span>
+              <input id="displayName" maxlength="32" autocomplete="name" data-i18n-placeholder="namePlaceholder" placeholder="내 이름">
+            </label>
+            <label>
+              <span data-i18n="roomLabel">방 코드</span>
+              <div class="inline-field">
+                <input id="roomCode" maxlength="24" autocomplete="off" spellcheck="false">
+                <button class="icon-button" id="randomRoom" type="button" data-i18n-title="newRoom" data-i18n-aria-label="newRoom" title="새 방">
+                  <span aria-hidden="true">+</span>
+                </button>
+              </div>
+            </label>
+          </div>
+
+          <div class="language-summary" id="languageSummary">한국어로 말하고 한국어 메뉴를 봅니다</div>
+
+          <div class="join-actions">
+            <button class="primary-action" id="joinCall" type="button" data-i18n="startCall">통화 시작</button>
+            <button class="secondary-action" id="copyInviteBeforeJoin" type="button" data-i18n="shareLink">초대 링크 공유</button>
+          </div>
+        </section>
+
+        <section class="stage" id="stage" hidden>
+          <div class="participant">
+            <div class="avatar-ring" id="voiceRing">
+              <span id="remoteInitial">?</span>
+            </div>
+            <p class="participant-name" id="remoteName">상대방</p>
+            <p class="participant-state" id="callState">연결 준비 중</p>
+          </div>
+
+          <div class="caption-window" aria-live="polite">
+            <p class="caption-source" id="captionSource">상대방 말이 여기에 표시됩니다</p>
+            <p class="caption-main" id="captionMain">번역 자막 대기 중</p>
+          </div>
+
+          <div class="local-strip">
+            <span data-i18n="mySpeech">내 말</span>
+            <p id="localSpeech">Realtime 자막 대기 중</p>
+          </div>
+        </section>
+
+        <footer class="controls" id="controls" hidden>
+          <button class="control-button" id="muteToggle" type="button" data-i18n-title="toggleMic" data-i18n-aria-label="toggleMic">
+            <span class="control-icon">Mic</span>
+            <span data-control-label="mic">마이크</span>
+          </button>
+          <button class="control-button" id="captionToggle" type="button" data-i18n-title="toggleCaptions" data-i18n-aria-label="toggleCaptions">
+            <span class="control-icon">CC</span>
+            <span data-control-label="captions">자막</span>
+          </button>
+          <button class="control-button danger" id="leaveCall" type="button" data-i18n-title="endCall" data-i18n-aria-label="endCall">
+            <span class="control-icon">End</span>
+            <span data-i18n="endCall">끊기</span>
+          </button>
+        </footer>
+      </section>
+
+      <aside class="transcript-panel" aria-label="Transcript">
+        <div class="panel-header">
+          <h2 data-i18n="transcriptTitle">대화 기록</h2>
+          <button class="ghost-button" id="clearTranscript" type="button" data-i18n="clear">지우기</button>
+        </div>
+        <ol class="transcript-list" id="transcriptList"></ol>
+      </aside>
+    </main>
+
+    <audio id="remoteAudio" autoplay playsinline></audio>
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>LiveSub Call</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
       <section class="call-surface" aria-label="통화 화면">
         <header class="topbar">
           <div>

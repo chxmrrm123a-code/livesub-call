@@ -211,6 +211,7 @@ const rtcConfig = {
   iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
 };
 const realtimeIdleMs = 1400;
+const realtimeTranslationEnabled = false;
 
 const state = {
   clientId: createClientId(),
@@ -227,12 +228,12 @@ const state = {
   remoteLanguage: null,
   realtime: null,
   remoteCaptionDrafts: new Map(),
-  captionsEnabled: true,
+  captionsEnabled: false,
   muted: false,
   joined: false,
   statusKey: "waiting",
   callStateKey: "peerWaiting",
-  localSpeechKey: "localCaptionReady",
+  localSpeechKey: "captionsOff",
 };
 
 function createClientId() {
@@ -433,7 +434,7 @@ async function joinCall() {
     setRemoteAudioStream();
     setStatusKey("connecting");
     setCallStateKey("peerWaiting");
-    setLocalSpeechKey("waitingPeerLanguage");
+    setLocalSpeechKey(state.captionsEnabled ? "waitingPeerLanguage" : "captionsOff");
     updateControls();
     startEvents();
   } catch (error) {
@@ -623,6 +624,11 @@ async function sendSignal(type, data, to = null) {
 }
 
 function maybeStartRealtimeTranslation() {
+  if (!realtimeTranslationEnabled) {
+    closeRealtimeTranslation();
+    setLocalSpeechKey("captionsOff");
+    return;
+  }
   if (!state.joined || !state.captionsEnabled || !state.localStream) return;
   if (!state.remoteLanguage) {
     setLocalSpeechKey("waitingPeerLanguage");
@@ -637,12 +643,20 @@ function maybeStartRealtimeTranslation() {
 }
 
 function restartRealtimeTranslation() {
+  if (!realtimeTranslationEnabled) {
+    closeRealtimeTranslation();
+    setLocalSpeechKey("captionsOff");
+    return;
+  }
   if (!state.joined || !state.captionsEnabled) return;
   closeRealtimeTranslation();
   maybeStartRealtimeTranslation();
 }
 
 async function startRealtimeTranslation() {
+  if (!realtimeTranslationEnabled) {
+    throw new Error("Realtime translation is temporarily disabled");
+  }
   closeRealtimeTranslation();
   const targetLanguage = state.remoteLanguage;
   if (!targetLanguage) {
@@ -910,6 +924,14 @@ function toggleMute() {
 }
 
 function toggleCaptions() {
+  if (!realtimeTranslationEnabled) {
+    state.captionsEnabled = false;
+    finishRealtimeCaption();
+    closeRealtimeTranslation();
+    setLocalSpeechKey("captionsOff");
+    updateControls();
+    return;
+  }
   state.captionsEnabled = !state.captionsEnabled;
   if (state.captionsEnabled) {
     setLocalSpeechKey("captionsOn");
@@ -925,6 +947,7 @@ function toggleCaptions() {
 function updateControls() {
   els.muteToggle.classList.toggle("active", !state.muted);
   els.captionToggle.classList.toggle("active", state.captionsEnabled);
+  els.captionToggle.disabled = !realtimeTranslationEnabled;
   const micLabel = els.muteToggle.querySelector("[data-control-label='mic']");
   const captionLabel = els.captionToggle.querySelector("[data-control-label='captions']");
   micLabel.textContent = state.muted ? t("micOff") : t("micOn");

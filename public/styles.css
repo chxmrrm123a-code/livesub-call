@@ -428,6 +428,11 @@ button:focus-visible {
   color: var(--accent-strong);
 }
 
+.control-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
 .control-button.danger {
   border-color: rgba(227, 95, 95, 0.5);
   color: #ffb8b8;

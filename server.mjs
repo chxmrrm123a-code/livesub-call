@@ -7,6 +7,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.join(__dirname, "public");
 const preferredPort = Number(process.env.PORT || 3000);
 const host = process.env.HOST || "0.0.0.0";
+const realtimeTranslationEnabled = process.env.ENABLE_REALTIME_TRANSLATION === "true";
 
 const rooms = new Map();
 const languages = new Map([
@@ -271,6 +272,11 @@ async function handleTranslate(req, res) {
 
 async function handleRealtimeTranslationToken(req, res) {
   try {
+    if (!realtimeTranslationEnabled) {
+      json(res, 503, { error: "Realtime translation is temporarily disabled" });
+      return;
+    }
+
     const body = await readJson(req, 20_000);
     const targetLanguage = validateLanguage(body.targetLanguage);
     const clientId = cleanClientId(body.clientId);

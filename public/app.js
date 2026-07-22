@@ -5,9 +5,9 @@ if (globalThis.__livesubCallLoaded) {
 globalThis.__livesubCallLoaded = true;
 
 const languageMeta = {
-  ko: { label: "한국어", short: "한", realtime: "ko" },
-  en: { label: "English", short: "EN", realtime: "en" },
-  vi: { label: "Tiếng Việt", short: "VI", realtime: "vi" },
+  ko: { label: "한국어", short: "한" },
+  en: { label: "English", short: "EN" },
+  vi: { label: "Tiếng Việt", short: "VI" },
 };
 
 const copy = {
@@ -44,12 +44,15 @@ const copy = {
     remoteInitial: "?",
     remoteCaptionReady: "상대방 말이 여기에 표시됩니다",
     captionWaiting: "번역 자막 대기 중",
-    localCaptionReady: "Realtime 자막 대기 중",
-    waitingPeerLanguage: "상대방이 들어오면 Realtime 자막이 켜집니다",
-    realtimeConnecting: "Realtime 자막 연결 중",
-    realtimeReady: "Realtime 자막 연결됨",
-    realtimeFailed: "Realtime 자막 오류: {message}",
-    realtimeUnavailable: "Realtime API 키 또는 연결을 확인해주세요",
+    localCaptionReady: "AI 번역 자막 준비됨",
+    waitingPeerLanguage: "상대방이 들어오면 번역 자막을 시작할 수 있습니다",
+    captionReady: "말하면 번역 자막이 시작됩니다",
+    captionListening: "듣는 중…",
+    captionProcessing: "자막 만드는 중…",
+    captionFailed: "자막 오류: {message}",
+    captionUnsupported: "이 브라우저에서는 AI 자막 녹음을 사용할 수 없습니다",
+    captionSlow: "연결이 느려 일부 자막을 건너뛰었습니다",
+    captionLimit: "오늘의 자막 사용 한도에 도달했습니다",
     captionsOff: "자막 꺼짐",
     captionsOn: "자막 켜짐",
     micOn: "마이크",
@@ -99,12 +102,15 @@ const copy = {
     remoteInitial: "?",
     remoteCaptionReady: "The other person will appear here",
     captionWaiting: "Waiting for translated captions",
-    localCaptionReady: "Realtime captions ready",
-    waitingPeerLanguage: "Realtime captions start when the other person joins",
-    realtimeConnecting: "Connecting Realtime captions",
-    realtimeReady: "Realtime captions connected",
-    realtimeFailed: "Realtime caption error: {message}",
-    realtimeUnavailable: "Check the Realtime API key or connection",
+    localCaptionReady: "AI translated captions ready",
+    waitingPeerLanguage: "Translated captions can start when the other person joins",
+    captionReady: "Speak to start translated captions",
+    captionListening: "Listening…",
+    captionProcessing: "Creating captions…",
+    captionFailed: "Caption error: {message}",
+    captionUnsupported: "AI caption recording is not supported in this browser",
+    captionSlow: "The connection is slow, so some captions were skipped",
+    captionLimit: "Today's caption limit has been reached",
     captionsOff: "Captions off",
     captionsOn: "Captions on",
     micOn: "Mic",
@@ -154,12 +160,15 @@ const copy = {
     remoteInitial: "?",
     remoteCaptionReady: "Lời nói của người kia sẽ hiện ở đây",
     captionWaiting: "Đang chờ phụ đề dịch",
-    localCaptionReady: "Phụ đề Realtime đã sẵn sàng",
-    waitingPeerLanguage: "Phụ đề Realtime bắt đầu khi người kia vào",
-    realtimeConnecting: "Đang kết nối phụ đề Realtime",
-    realtimeReady: "Đã kết nối phụ đề Realtime",
-    realtimeFailed: "Lỗi phụ đề Realtime: {message}",
-    realtimeUnavailable: "Kiểm tra API key Realtime hoặc kết nối",
+    localCaptionReady: "Phụ đề dịch AI đã sẵn sàng",
+    waitingPeerLanguage: "Có thể bắt đầu phụ đề dịch khi người kia vào",
+    captionReady: "Hãy nói để bắt đầu phụ đề dịch",
+    captionListening: "Đang nghe…",
+    captionProcessing: "Đang tạo phụ đề…",
+    captionFailed: "Lỗi phụ đề: {message}",
+    captionUnsupported: "Trình duyệt này không hỗ trợ ghi âm phụ đề AI",
+    captionSlow: "Kết nối chậm nên một số phụ đề đã bị bỏ qua",
+    captionLimit: "Đã đạt giới hạn phụ đề hôm nay",
     captionsOff: "Đã tắt phụ đề",
     captionsOn: "Đã bật phụ đề",
     micOn: "Mic",
@@ -210,8 +219,14 @@ const els = {
 const rtcConfig = {
   iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
 };
-const realtimeIdleMs = 1400;
-const realtimeTranslationEnabled = false;
+const captionConfig = {
+  sampleIntervalMs: 50,
+  silenceMs: 550,
+  minimumSegmentMs: 650,
+  maximumSegmentMs: 4200,
+  maximumQueueSize: 2,
+  maximumSessionAudioMs: 60 * 60 * 1000,
+};
 
 const state = {
   clientId: createClientId(),
@@ -226,7 +241,11 @@ const state = {
   remotePeerId: null,
   remoteDisplayName: "",
   remoteLanguage: null,
-  realtime: null,
+  captionCapture: null,
+  captionQueue: [],
+  captionProcessing: false,
+  captionAbortController: null,
+  captionSessionAudioMs: 0,
   remoteCaptionDrafts: new Map(),
   captionsEnabled: false,
   muted: false,
@@ -299,6 +318,11 @@ function init() {
   els.clearTranscript.addEventListener("click", () => {
     els.transcriptList.innerHTML = "";
   });
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && state.captionCapture?.audioContext?.state === "suspended") {
+      state.captionCapture.audioContext.resume().catch(() => {});
+    }
+  });
 }
 
 function applyLocale() {
@@ -342,7 +366,7 @@ function setLanguage(language) {
       name: state.name,
       language: state.language,
     }).catch(() => {});
-    if (state.captionsEnabled) restartRealtimeTranslation();
+    if (state.captionsEnabled) restartCaptionCapture();
   }
 }
 
@@ -461,7 +485,7 @@ function startEvents() {
       setRemoteProfile(peer);
       connectToPeer(peer.id, true);
     }
-    maybeStartRealtimeTranslation();
+    maybeStartCaptionCapture();
   });
   state.eventSource.addEventListener("peer-joined", (event) => {
     const payload = normalizePeerProfile(JSON.parse(event.data));
@@ -469,7 +493,7 @@ function startEvents() {
     setRemoteProfile(payload);
     setCallStateKey("peerJoined");
     connectToPeer(payload.id, false);
-    maybeStartRealtimeTranslation();
+    maybeStartCaptionCapture();
   });
   state.eventSource.addEventListener("peer-left", (event) => {
     const payload = JSON.parse(event.data);
@@ -480,7 +504,7 @@ function startEvents() {
       state.remoteLanguage = null;
       state.remoteDisplayName = "";
       renderRemoteIdentity();
-      closeRealtimeTranslation();
+      stopCaptionCapture();
       setLocalSpeechKey("waitingPeerLanguage");
     }
     setCallStateKey("peerLeft");
@@ -514,7 +538,7 @@ function setRemoteProfile(profile) {
   state.remoteLanguage = profile.language || state.remoteLanguage;
   renderRemoteIdentity();
   if (state.captionsEnabled && state.remoteLanguage && state.joined) {
-    maybeStartRealtimeTranslation();
+    maybeStartCaptionCapture();
   }
 }
 
@@ -581,7 +605,7 @@ async function handleSignal(message) {
   if (message.from === state.clientId) return;
   if (message.type === "profile") {
     setRemoteProfile(normalizePeerProfile({ id: message.from, ...message.data }));
-    restartRealtimeTranslation();
+    restartCaptionCapture();
     return;
   }
   if (message.type === "translated-caption-preview") {
@@ -623,230 +647,295 @@ async function sendSignal(type, data, to = null) {
   });
 }
 
-function maybeStartRealtimeTranslation() {
-  if (!realtimeTranslationEnabled) {
-    closeRealtimeTranslation();
-    setLocalSpeechKey("captionsOff");
+function maybeStartCaptionCapture() {
+  if (!state.joined || !state.captionsEnabled || !state.localStream || state.muted) return;
+  if (state.captionCapture) {
+    state.captionCapture.audioContext.resume().catch(() => {});
+    setLocalSpeechKey(state.remoteLanguage ? "captionReady" : "waitingPeerLanguage");
     return;
   }
-  if (!state.joined || !state.captionsEnabled || !state.localStream) return;
-  if (!state.remoteLanguage) {
-    setLocalSpeechKey("waitingPeerLanguage");
-    return;
-  }
-  if (state.realtime?.active && state.realtime.targetLanguage === state.remoteLanguage) return;
-  startRealtimeTranslation().catch((error) => {
-    console.error(error);
-    closeRealtimeTranslation();
-    setLocalSpeechText(t("realtimeFailed", { message: error.message || t("realtimeUnavailable") }));
-  });
+  startCaptionCapture();
 }
 
-function restartRealtimeTranslation() {
-  if (!realtimeTranslationEnabled) {
-    closeRealtimeTranslation();
-    setLocalSpeechKey("captionsOff");
-    return;
-  }
-  if (!state.joined || !state.captionsEnabled) return;
-  closeRealtimeTranslation();
-  maybeStartRealtimeTranslation();
+function restartCaptionCapture() {
+  stopCaptionCapture();
+  if (state.joined && state.captionsEnabled && !state.muted) maybeStartCaptionCapture();
 }
 
-async function startRealtimeTranslation() {
-  if (!realtimeTranslationEnabled) {
-    throw new Error("Realtime translation is temporarily disabled");
-  }
-  closeRealtimeTranslation();
-  const targetLanguage = state.remoteLanguage;
-  if (!targetLanguage) {
-    setLocalSpeechKey("waitingPeerLanguage");
+function startCaptionCapture() {
+  const AudioContextClass = globalThis.AudioContext || globalThis.webkitAudioContext;
+  const track = state.localStream?.getAudioTracks()[0];
+  if (!AudioContextClass || typeof globalThis.MediaRecorder !== "function" || !track) {
+    state.captionsEnabled = false;
+    setLocalSpeechKey("captionUnsupported");
+    updateControls();
     return;
   }
 
-  setLocalSpeechKey("realtimeConnecting");
-  const secretResponse = await fetch("/api/realtime/translation-token", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({
-      targetLanguage,
-      clientId: state.clientId,
-    }),
-  });
-  const secretPayload = await secretResponse.json().catch(() => ({}));
-  if (!secretResponse.ok) {
-    throw new Error(secretPayload.error || t("realtimeUnavailable"));
-  }
-  const clientSecret =
-    secretPayload.value ||
-    secretPayload.client_secret?.value ||
-    secretPayload.client_secret ||
-    secretPayload.secret?.value;
-  if (!clientSecret) throw new Error(t("realtimeUnavailable"));
+  const audioContext = new AudioContextClass();
+  const source = audioContext.createMediaStreamSource(new MediaStream([track]));
+  const analyser = audioContext.createAnalyser();
+  analyser.fftSize = 1024;
+  analyser.smoothingTimeConstant = 0.18;
+  source.connect(analyser);
 
-  const PeerConnection = globalThis.RTCPeerConnection || globalThis.webkitRTCPeerConnection;
-  const pc = new PeerConnection();
-  const dataChannel = pc.createDataChannel("oai-events");
-  const realtime = {
-    pc,
-    dataChannel,
-    targetLanguage,
-    captionId: createCaptionId(),
-    sourceText: "",
-    outputText: "",
-    idleTimer: null,
-    localItem: null,
-    active: true,
+  const capture = {
+    audioContext,
+    source,
+    analyser,
+    samples: new Float32Array(analyser.fftSize),
+    track,
+    timer: null,
+    segment: null,
+    stopping: false,
+    stopped: false,
+    voiceFrames: 0,
+    voiceDetected: false,
+    noiseFloor: 0.004,
   };
-  state.realtime = realtime;
+  state.captionCapture = capture;
+  audioContext.resume().catch(() => {});
+  capture.timer = setInterval(() => sampleCaptionAudio(capture), captionConfig.sampleIntervalMs);
+  setLocalSpeechKey(state.remoteLanguage ? "captionReady" : "waitingPeerLanguage");
+}
 
-  for (const track of state.localStream.getAudioTracks()) {
-    pc.addTrack(track, state.localStream);
+function sampleCaptionAudio(capture) {
+  if (capture.stopped || state.captionCapture !== capture) return;
+  if (!state.joined || !state.captionsEnabled || state.muted || !capture.track.enabled) return;
+
+  capture.analyser.getFloatTimeDomainData(capture.samples);
+  let energy = 0;
+  for (const sample of capture.samples) energy += sample * sample;
+  const rms = Math.sqrt(energy / capture.samples.length);
+  const threshold = Math.max(0.01, Math.min(0.045, capture.noiseFloor * 2.4));
+  const hasVoice = rms > threshold;
+  capture.voiceDetected = hasVoice;
+
+  if (!capture.segment && !hasVoice) {
+    capture.noiseFloor = Math.max(0.0025, Math.min(0.02, capture.noiseFloor * 0.96 + rms * 0.04));
+  }
+  capture.voiceFrames = hasVoice ? capture.voiceFrames + 1 : 0;
+
+  const now = performance.now();
+  if (!capture.segment && !capture.stopping && capture.voiceFrames >= 2 && state.remoteLanguage) {
+    beginCaptionSegment(capture, now);
   }
 
-  dataChannel.addEventListener("open", () => {
-    if (state.realtime === realtime) setLocalSpeechKey("realtimeReady");
-  });
-  dataChannel.addEventListener("message", (event) => {
-    if (state.realtime !== realtime) return;
-    handleRealtimeEvent(JSON.parse(event.data));
-  });
-  dataChannel.addEventListener("close", () => {
-    if (state.realtime === realtime && state.captionsEnabled) setLocalSpeechKey("realtimeConnecting");
-  });
-  pc.addEventListener("connectionstatechange", () => {
-    if (state.realtime !== realtime) return;
-    if (pc.connectionState === "connected") setLocalSpeechKey("realtimeReady");
-    if (["failed", "disconnected"].includes(pc.connectionState)) {
-      setLocalSpeechText(t("realtimeFailed", { message: pc.connectionState }));
+  const segment = capture.segment;
+  if (!segment) return;
+  if (hasVoice) segment.lastVoiceAt = now;
+  const elapsed = now - segment.startedAt;
+  if (elapsed >= captionConfig.maximumSegmentMs) {
+    finishCaptionSegment(capture, { restartAfterStop: hasVoice });
+    return;
+  }
+  if (elapsed >= captionConfig.minimumSegmentMs && now - segment.lastVoiceAt >= captionConfig.silenceMs) {
+    finishCaptionSegment(capture);
+  }
+}
+
+function recorderMimeType() {
+  const candidates = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"];
+  return candidates.find((type) => {
+    try {
+      return !MediaRecorder.isTypeSupported || MediaRecorder.isTypeSupported(type);
+    } catch {
+      return false;
     }
-  });
+  }) || "";
+}
 
-  const offer = await pc.createOffer();
-  await pc.setLocalDescription(offer);
-  const answerResponse = await fetch("https://api.openai.com/v1/realtime/translations/calls", {
-    method: "POST",
-    body: offer.sdp,
-    headers: {
-      "authorization": `Bearer ${clientSecret}`,
-      "content-type": "application/sdp",
-    },
-  });
-  if (!answerResponse.ok) {
-    const errorText = await answerResponse.text().catch(() => "");
-    throw new Error(errorText || `OpenAI Realtime failed with ${answerResponse.status}`);
+function beginCaptionSegment(capture, now = performance.now()) {
+  if (capture.segment || capture.stopping || capture.stopped || !state.remoteLanguage) return;
+  const mimeType = recorderMimeType();
+  let recorder;
+  try {
+    const stream = new MediaStream([capture.track]);
+    recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+  } catch (error) {
+    state.captionsEnabled = false;
+    setLocalSpeechText(t("captionFailed", { message: error.message || t("captionUnsupported") }));
+    stopCaptionCapture();
+    updateControls();
+    return;
   }
-  const answer = {
-    type: "answer",
-    sdp: await answerResponse.text(),
+
+  const segment = {
+    recorder,
+    chunks: [],
+    startedAt: now,
+    lastVoiceAt: now,
+    durationMs: 0,
+    targetLanguage: state.remoteLanguage,
+    peerId: state.remotePeerId,
+    discard: false,
+    restartAfterStop: false,
+    completed: false,
   };
-  await pc.setRemoteDescription(answer);
+  capture.segment = segment;
+
+  recorder.addEventListener("dataavailable", (event) => {
+    if (event.data?.size) segment.chunks.push(event.data);
+  });
+  recorder.addEventListener("stop", () => completeCaptionSegment(capture, segment));
+  recorder.addEventListener("error", (event) => {
+    setLocalSpeechText(t("captionFailed", { message: event.error?.message || "recording" }));
+  });
+  recorder.start(250);
+  setLocalSpeechKey("captionListening");
 }
 
-function handleRealtimeEvent(event) {
-  if (event.type === "error") {
-    setLocalSpeechText(t("realtimeFailed", { message: event.error?.message || "unknown" }));
+function finishCaptionSegment(capture, { discard = false, restartAfterStop = false } = {}) {
+  const segment = capture.segment;
+  if (!segment) return;
+  capture.segment = null;
+  capture.stopping = true;
+  capture.voiceFrames = 0;
+  segment.discard = discard;
+  segment.restartAfterStop = restartAfterStop;
+  segment.durationMs = Math.max(0, performance.now() - segment.startedAt);
+  try {
+    if (segment.recorder.state !== "inactive") segment.recorder.stop();
+    else completeCaptionSegment(capture, segment);
+  } catch {
+    completeCaptionSegment(capture, segment);
+  }
+}
+
+function completeCaptionSegment(capture, segment) {
+  if (segment.completed) return;
+  segment.completed = true;
+  capture.stopping = false;
+
+  if (!segment.discard && !capture.stopped && state.captionsEnabled && segment.chunks.length) {
+    const type = segment.recorder.mimeType || segment.chunks[0].type || "audio/webm";
+    const blob = new Blob(segment.chunks, { type });
+    enqueueCaptionSegment({
+      blob,
+      durationMs: Math.round(segment.durationMs),
+      targetLanguage: segment.targetLanguage,
+      peerId: segment.peerId,
+    });
+  }
+
+  if (
+    segment.restartAfterStop &&
+    !capture.stopped &&
+    state.captionCapture === capture &&
+    state.captionsEnabled &&
+    state.remoteLanguage &&
+    !state.muted
+  ) {
+    beginCaptionSegment(capture);
+  }
+}
+
+function enqueueCaptionSegment(segment) {
+  if (segment.durationMs < captionConfig.minimumSegmentMs || segment.blob.size < 1200) return;
+  if (state.captionSessionAudioMs + segment.durationMs > captionConfig.maximumSessionAudioMs) {
+    state.captionsEnabled = false;
+    stopCaptionCapture();
+    setLocalSpeechKey("captionLimit");
+    updateControls();
     return;
   }
-
-  const delta = getRealtimeText(event);
-  if (delta === "") return;
-
-  const realtime = state.realtime;
-  if (!realtime) return;
-  if (event.type.includes("input_transcript")) {
-    realtime.sourceText += delta;
-    setLocalSpeechText(realtime.sourceText.trim() || t("listening"));
-    updateLocalRealtimeItem(false);
-  }
-  if (event.type.includes("output_transcript")) {
-    realtime.outputText += delta;
-    updateLocalRealtimeItem(false);
-    publishRealtimeCaption(false);
-  }
-
-  if (event.type.endsWith(".done") || event.type.endsWith(".completed")) {
-    finishRealtimeCaption();
+  if (state.captionQueue.length >= captionConfig.maximumQueueSize) {
+    setLocalSpeechKey("captionSlow");
     return;
   }
-  scheduleRealtimeIdle();
+  state.captionSessionAudioMs += segment.durationMs;
+  state.captionQueue.push(segment);
+  processCaptionQueue();
 }
 
-function getRealtimeText(event) {
-  const value = event.delta ?? event.text ?? event.transcript ?? event.output_text ?? "";
-  return String(value);
-}
+async function processCaptionQueue() {
+  if (state.captionProcessing || !state.captionQueue.length || !state.captionsEnabled) return;
+  state.captionProcessing = true;
+  const segment = state.captionQueue.shift();
+  const controller = new AbortController();
+  state.captionAbortController = controller;
+  setLocalSpeechKey("captionProcessing");
 
-function scheduleRealtimeIdle() {
-  const realtime = state.realtime;
-  if (!realtime) return;
-  clearTimeout(realtime.idleTimer);
-  realtime.idleTimer = setTimeout(finishRealtimeCaption, realtimeIdleMs);
-}
+  try {
+    const params = new URLSearchParams({
+      room: state.room,
+      client: state.clientId,
+      sourceLanguage: state.language,
+      targetLanguage: segment.targetLanguage,
+      durationMs: String(segment.durationMs),
+    });
+    const response = await fetch(`/api/caption?${params.toString()}`, {
+      method: "POST",
+      headers: { "content-type": segment.blob.type || "audio/webm" },
+      body: segment.blob,
+      signal: controller.signal,
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const error = new Error(payload.error || `HTTP ${response.status}`);
+      error.code = payload.code || "caption_error";
+      throw error;
+    }
+    if (!state.joined || !state.captionsEnabled) return;
 
-function publishRealtimeCaption(final) {
-  const realtime = state.realtime;
-  if (!realtime || !realtime.outputText.trim()) return;
-  sendSignal(final ? "translated-caption" : "translated-caption-preview", {
-    id: realtime.captionId,
-    original: realtime.sourceText.trim(),
-    text: realtime.outputText.trim(),
-    sourceLanguage: state.language,
-    targetLanguage: realtime.targetLanguage,
-    speakerName: state.name,
-    at: Date.now(),
-  }).catch(() => {});
-}
-
-function updateLocalRealtimeItem(final) {
-  const realtime = state.realtime;
-  if (!realtime) return;
-  const original = realtime.sourceText.trim() || t("listening");
-  const translation = realtime.outputText.trim() || t("translating");
-  const status = `${languageMeta[state.language].label} → ${languageMeta[realtime.targetLanguage]?.label || ""}`;
-  if (!realtime.localItem) {
-    realtime.localItem = appendTranscript({
+    const original = String(payload.originalText || "").trim();
+    const translation = String(payload.translatedText || original).trim();
+    if (!original || !translation) return;
+    const status = `${languageMeta[state.language].label} → ${languageMeta[segment.targetLanguage]?.label || ""}`;
+    appendTranscript({
       speaker: state.name,
       original,
       translation,
       local: true,
       status,
     });
-  } else {
-    realtime.localItem.querySelector(".transcript-original").textContent = original;
-    realtime.localItem.querySelector(".transcript-translation").textContent = translation;
-    realtime.localItem.querySelector(".transcript-meta span").textContent = `${state.name} · ${status}`;
+    setLocalSpeechText(original);
+    sendSignal("translated-caption", {
+      id: createCaptionId(),
+      original,
+      text: translation,
+      sourceLanguage: state.language,
+      targetLanguage: segment.targetLanguage,
+      speakerName: state.name,
+      at: Date.now(),
+    }, segment.peerId).catch(() => {});
+  } catch (error) {
+    if (error.name !== "AbortError") {
+      console.error(error);
+      if (error.code === "caption_limit") {
+        state.captionsEnabled = false;
+        stopCaptionCapture();
+        setLocalSpeechKey("captionLimit");
+        updateControls();
+      } else if (error.code === "caption_busy" || error.code === "caption_rate") {
+        setLocalSpeechKey("captionSlow");
+      } else {
+        setLocalSpeechText(t("captionFailed", { message: error.message || "network" }));
+      }
+    }
+  } finally {
+    if (state.captionAbortController === controller) state.captionAbortController = null;
+    state.captionProcessing = false;
+    if (state.captionQueue.length && state.captionsEnabled) processCaptionQueue();
   }
-  realtime.localItem.classList.toggle("preview", !final);
 }
 
-function finishRealtimeCaption() {
-  const realtime = state.realtime;
-  if (!realtime) return;
-  clearTimeout(realtime.idleTimer);
-  realtime.idleTimer = null;
-  if (realtime.sourceText.trim() || realtime.outputText.trim()) {
-    updateLocalRealtimeItem(true);
-    publishRealtimeCaption(true);
+function stopCaptionCapture({ clearQueue = true } = {}) {
+  const capture = state.captionCapture;
+  state.captionCapture = null;
+  if (capture) {
+    capture.stopped = true;
+    clearInterval(capture.timer);
+    if (capture.segment) finishCaptionSegment(capture, { discard: true });
+    try {
+      capture.source.disconnect();
+    } catch {}
+    capture.audioContext.close().catch(() => {});
   }
-  realtime.captionId = createCaptionId();
-  realtime.sourceText = "";
-  realtime.outputText = "";
-  realtime.localItem = null;
-  if (state.captionsEnabled && state.joined) setLocalSpeechKey("realtimeReady");
-}
-
-function closeRealtimeTranslation() {
-  const realtime = state.realtime;
-  if (!realtime) return;
-  clearTimeout(realtime.idleTimer);
-  try {
-    realtime.dataChannel?.close();
-  } catch {}
-  try {
-    realtime.pc?.close();
-  } catch {}
-  state.realtime = null;
+  if (clearQueue) {
+    state.captionQueue = [];
+    state.captionAbortController?.abort();
+  }
 }
 
 function createCaptionId() {
@@ -920,25 +1009,22 @@ function toggleMute() {
   for (const track of state.localStream?.getAudioTracks() || []) {
     track.enabled = !state.muted;
   }
+  if (state.muted) {
+    stopCaptionCapture();
+    if (state.captionsEnabled) setLocalSpeechKey("captionsOn");
+  } else if (state.captionsEnabled) {
+    maybeStartCaptionCapture();
+  }
   updateControls();
 }
 
 function toggleCaptions() {
-  if (!realtimeTranslationEnabled) {
-    state.captionsEnabled = false;
-    finishRealtimeCaption();
-    closeRealtimeTranslation();
-    setLocalSpeechKey("captionsOff");
-    updateControls();
-    return;
-  }
   state.captionsEnabled = !state.captionsEnabled;
   if (state.captionsEnabled) {
     setLocalSpeechKey("captionsOn");
-    maybeStartRealtimeTranslation();
+    maybeStartCaptionCapture();
   } else {
-    finishRealtimeCaption();
-    closeRealtimeTranslation();
+    stopCaptionCapture();
     setLocalSpeechKey("captionsOff");
   }
   updateControls();
@@ -947,7 +1033,7 @@ function toggleCaptions() {
 function updateControls() {
   els.muteToggle.classList.toggle("active", !state.muted);
   els.captionToggle.classList.toggle("active", state.captionsEnabled);
-  els.captionToggle.disabled = !realtimeTranslationEnabled;
+  els.captionToggle.disabled = false;
   const micLabel = els.muteToggle.querySelector("[data-control-label='mic']");
   const captionLabel = els.captionToggle.querySelector("[data-control-label='captions']");
   micLabel.textContent = state.muted ? t("micOff") : t("micOn");
@@ -999,7 +1085,7 @@ function leaveCall() {
   state.joined = false;
   state.eventSource?.close();
   state.eventSource = null;
-  closeRealtimeTranslation();
+  stopCaptionCapture();
   for (const peer of state.peers.values()) peer.close();
   state.peers.clear();
   state.peerProfiles.clear();
@@ -1018,13 +1104,16 @@ function leaveCall() {
   setCaptionText("", "");
   setStatusKey("waiting");
   setCallStateKey("peerWaiting");
-  setLocalSpeechKey("localCaptionReady");
+  state.captionsEnabled = false;
+  state.captionSessionAudioMs = 0;
+  setLocalSpeechKey("captionsOff");
+  updateControls();
   renderRemoteIdentity();
 }
 
 window.addEventListener("beforeunload", () => {
   state.eventSource?.close();
-  closeRealtimeTranslation();
+  stopCaptionCapture();
   for (const track of state.localStream?.getTracks() || []) track.stop();
 });
 

@@ -9,5 +9,17 @@ services:
     envVars:
       - key: OPENAI_API_KEY
         sync: false
+      - key: OPENAI_TRANSCRIPTION_MODEL
+        value: gpt-4o-mini-transcribe
+      - key: OPENAI_CAPTION_TRANSLATION_MODEL
+        value: gpt-4o-mini
       - key: OPENAI_TRANSLATION_MODEL
-        value: gpt-5.4-nano
+        value: gpt-4o-mini
+      - key: ENABLE_AI_CAPTIONS
+        value: true
+      - key: ENABLE_REALTIME_TRANSLATION
+        value: false
+      - key: CAPTION_MAX_REQUESTS_PER_MINUTE
+        value: 30
+      - key: CAPTION_MAX_MINUTES_PER_CLIENT
+        value: 90

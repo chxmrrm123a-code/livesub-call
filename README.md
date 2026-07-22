@@ -6,7 +6,8 @@
 
 ```powershell
 $env:OPENAI_API_KEY="sk-your-key"
-$env:OPENAI_TRANSLATION_MODEL="gpt-5.4-nano"
+$env:OPENAI_TRANSCRIPTION_MODEL="gpt-4o-mini-transcribe"
+$env:OPENAI_CAPTION_TRANSLATION_MODEL="gpt-4o-mini"
 .\start-local.ps1
 ```
 
@@ -34,11 +35,13 @@ See `DEPLOY_RENDER.md` for the short phone-first deploy checklist.
 - WebRTC voice/video traffic can be peer-to-peer, so there is no required per-minute call API fee.
 - This MVP does not include TURN, so some strict mobile networks may fail to connect. Add TURN only after that actually happens.
 - A production app still needs hosting for the signaling server.
-- This prototype uses browser speech recognition to avoid separate speech-to-text API cost. Production reliability may require a paid STT service.
-- Translation captions use the OpenAI API when `OPENAI_API_KEY` is set. Without a key, the app runs in demo translation mode.
+- AI captions are off by default and reuse the microphone stream already opened for the WebRTC call.
+- Local voice activity detection skips silence. Speech is uploaded in short bounded segments to `gpt-4o-mini-transcribe`, then translated with `gpt-4o-mini`.
+- The server limits segment size, one in-flight caption per client, request rate, and caption audio minutes per client.
+- Realtime translation remains disabled. Without `OPENAI_API_KEY`, WebRTC calling still works but AI captions return an unavailable message.
 
 ## Notes
 
 - Microphone access works on `localhost`; deployed versions should use HTTPS.
-- Browser speech recognition is best supported in Chrome and Edge.
+- Caption recording requires `MediaRecorder` and Web Audio support. Current Chrome and Samsung Internet are recommended on Android.
 - The WebRTC layer is voice-only now, but it is structured so camera tracks can be added later.

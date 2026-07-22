@@ -178,6 +178,10 @@ h2 {
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.34);
 }
 
+.language-menu[hidden] {
+  display: none;
+}
+
 .language-menu button {
   min-height: 40px;
   border: 0;
@@ -541,6 +545,13 @@ button:focus-visible {
 
   .language-button {
     max-width: 160px;
+  }
+
+  .language-menu {
+    right: auto;
+    left: 0;
+    width: min(220px, calc(100vw - 48px));
+    min-width: 0;
   }
 
   .join-panel {

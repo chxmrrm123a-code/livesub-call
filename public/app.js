@@ -220,10 +220,10 @@ const rtcConfig = {
   iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
 };
 const captionConfig = {
-  sampleIntervalMs: 50,
-  silenceMs: 550,
+  sampleIntervalMs: 40,
+  silenceMs: 850,
   minimumSegmentMs: 650,
-  maximumSegmentMs: 4200,
+  maximumSegmentMs: 5200,
   maximumQueueSize: 2,
   maximumSessionAudioMs: 60 * 60 * 1000,
 };
@@ -717,7 +717,7 @@ function sampleCaptionAudio(capture) {
   capture.voiceFrames = hasVoice ? capture.voiceFrames + 1 : 0;
 
   const now = performance.now();
-  if (!capture.segment && !capture.stopping && capture.voiceFrames >= 2 && state.remoteLanguage) {
+  if (!capture.segment && !capture.stopping && capture.voiceFrames >= 1 && state.remoteLanguage) {
     beginCaptionSegment(capture, now);
   }
 
